@@ -1,5 +1,10 @@
 // Load environment variables FIRST before any other requires
 require('dotenv').config();
+console.log('Cloudinary Config:', {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  // Don't log secret
+});
 
 const app = require('./app');
 const connectDB = require('./config/db');

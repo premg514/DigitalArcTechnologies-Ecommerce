@@ -106,7 +106,7 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'return_requested', 'returned'],
       default: 'pending',
     },
     isPaid: {
@@ -132,6 +132,27 @@ const orderSchema = new mongoose.Schema(
     trackingNumber: {
       type: String,
     },
+    returnRequest: {
+      reason: String,
+      status: {
+        type: String,
+        enum: ['none', 'pending', 'approved', 'rejected'],
+        default: 'none',
+      },
+      requestedAt: Date,
+      resolvedAt: Date,
+      adminComment: String,
+    },
+    timeline: [
+      {
+        status: String,
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+        comment: String,
+      },
+    ],
     notes: {
       type: String,
       maxlength: 500,

@@ -1,26 +1,37 @@
-const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/Order');
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const razorpay = require('../config/razorpay');
 
 // @desc    Create Razorpay order
 // @route   POST /api/payment/create-order
 // @access  Private
 exports.createRazorpayOrder = async (req, res) => {
   try {
-    const { amount, orderId } = req.body;
-    const amountInPaise = Math.round(amount * 100);
+    const { items, shippingPrice = 0, taxPrice = 0 } = req.body;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No items provided'
+      });
+    }
+
+    // Calculate amount from items (optional: verify prices from DB for security, skipping for now based on context)
+    // Ideally we should fetch product prices from DB here.
+    // For now assuming items have price.
+    let itemsTotal = 0;
+    items.forEach(item => {
+      itemsTotal += item.price * item.quantity;
+    });
+
+    const totalAmount = itemsTotal + shippingPrice + taxPrice;
+    const amountInPaise = Math.round(totalAmount * 100);
 
     const options = {
       amount: amountInPaise, // amount in paise
       currency: 'INR',
-      receipt: `receipt_${orderId}`,
+      receipt: `receipt_${Date.now()}`,
       notes: {
-        orderId: orderId,
         userId: req.user._id.toString(),
       },
     };

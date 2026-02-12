@@ -11,6 +11,7 @@ const {
   getAdminProducts,
 } = require('../controllers/productController');
 const { protect, adminOnly } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 // Public routes
 router.get('/', getProducts);
@@ -24,9 +25,9 @@ router.get('/:id', getProductById);
 // Protected routes
 router.post('/:id/reviews', protect, createProductReview);
 
-// Admin routes
-router.post('/', protect, adminOnly, createProduct);
-router.put('/:id', protect, adminOnly, updateProduct);
+// Admin routes with file upload
+router.post('/', protect, adminOnly, upload.array('images', 10), createProduct);
+router.put('/:id', protect, adminOnly, upload.array('images', 10), updateProduct);
 router.delete('/:id', protect, adminOnly, deleteProduct);
 
 module.exports = router;

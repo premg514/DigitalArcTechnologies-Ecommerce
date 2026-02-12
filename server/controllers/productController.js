@@ -101,13 +101,36 @@ exports.getProductById = async (req, res) => {
 // @access  Private/Admin
 exports.createProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const productData = { ...req.body };
+    console.log('Create Product Request Body:', req.body);
+    console.log('Create Product Files:', req.files);
+
+    // Handle uploaded files
+    if (req.files && req.files.length > 0) {
+      // Generate image objects from uploaded files
+      productData.images = req.files.map((file) => ({
+        url: file.path,
+        alt: req.body.alt || 'Product image',
+      }));
+    } else if (req.body.images) {
+      // Handle URL-based images (backward compatibility)
+      try {
+        productData.images = typeof req.body.images === 'string'
+          ? JSON.parse(req.body.images)
+          : req.body.images;
+      } catch (e) {
+        productData.images = req.body.images;
+      }
+    }
+
+    const product = await Product.create(productData);
 
     res.status(201).json({
       success: true,
       data: product,
     });
   } catch (error) {
+    console.error('Create Product Error:', error);
     res.status(400).json({
       success: false,
       message: error.message,
@@ -120,9 +143,43 @@ exports.createProduct = async (req, res) => {
 // @access  Private/Admin
 exports.updateProduct = async (req, res) => {
   try {
+    const productData = { ...req.body };
+
+    // Handle uploaded files
+    if (req.files && req.files.length > 0) {
+      // Generate image objects from uploaded files
+      const newImages = req.files.map((file) => ({
+        url: file.path,
+        alt: req.body.alt || 'Product image',
+      }));
+
+      // If there are existing images in the request, merge them
+      if (req.body.existingImages) {
+        try {
+          const existingImages = typeof req.body.existingImages === 'string'
+            ? JSON.parse(req.body.existingImages)
+            : req.body.existingImages;
+          productData.images = [...existingImages, ...newImages];
+        } catch (e) {
+          productData.images = newImages;
+        }
+      } else {
+        productData.images = newImages;
+      }
+    } else if (req.body.images) {
+      // Handle URL-based images (backward compatibility)
+      try {
+        productData.images = typeof req.body.images === 'string'
+          ? JSON.parse(req.body.images)
+          : req.body.images;
+      } catch (e) {
+        productData.images = req.body.images;
+      }
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      productData,
       {
         new: true,
         runValidators: true,

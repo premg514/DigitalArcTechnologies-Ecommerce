@@ -35,13 +35,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    address: {
-      street: String,
-      city: String,
-      state: String,
-      country: String,
-      zipCode: String,
-    },
+    addresses: [
+      {
+        street: String,
+        city: String,
+        state: String,
+        country: String,
+        zipCode: String,
+        phone: String,
+        isDefault: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
     avatar: {
       type: String,
       default: 'https://via.placeholder.com/150',
