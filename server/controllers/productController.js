@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const { getIO } = require('../config/socket');
 
 // @desc    Get all products with filters
 // @route   GET /api/products
@@ -125,6 +126,15 @@ exports.createProduct = async (req, res) => {
 
     const product = await Product.create(productData);
 
+    // Emit socket event
+    try {
+      const io = getIO();
+      io.emit('invalidate_query', ['products']);
+      io.emit('invalidate_query', ['admin-products']);
+    } catch (error) {
+      console.error('Socket emit error:', error);
+    }
+
     res.status(201).json({
       success: true,
       data: product,
@@ -197,6 +207,16 @@ exports.updateProduct = async (req, res) => {
       success: true,
       data: product,
     });
+
+    // Emit socket event
+    try {
+      const io = getIO();
+      io.emit('invalidate_query', ['products']);
+      io.emit('invalidate_query', ['admin-products']);
+      io.emit('invalidate_query', ['product', req.params.id]);
+    } catch (error) {
+      console.error('Socket emit error:', error);
+    }
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -223,6 +243,17 @@ exports.deleteProduct = async (req, res) => {
       success: true,
       message: 'Product deleted successfully',
     });
+
+    // Emit socket event
+    try {
+      const io = getIO();
+      console.log('Emitting product deletion events for ID:', req.params.id);
+      io.emit('invalidate_query', ['products']);
+      io.emit('invalidate_query', ['admin-products']);
+      io.emit('invalidate_query', ['product', req.params.id]);
+    } catch (error) {
+      console.error('Socket emit error:', error);
+    }
   } catch (error) {
     res.status(500).json({
       success: false,

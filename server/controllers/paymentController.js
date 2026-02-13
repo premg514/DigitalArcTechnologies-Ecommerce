@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const razorpay = require('../config/razorpay');
 
 // @desc    Create Razorpay order
@@ -16,9 +17,25 @@ exports.createRazorpayOrder = async (req, res) => {
       });
     }
 
-    // Calculate amount from items (optional: verify prices from DB for security, skipping for now based on context)
-    // Ideally we should fetch product prices from DB here.
-    // For now assuming items have price.
+    // Verify stock availability
+    for (const item of items) {
+      const product = await Product.findById(item.productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product not found: ${item.name}`
+        });
+      }
+
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${product.name}. Available: ${product.stock}`
+        });
+      }
+    }
+
+    // Calculate amount from items
     let itemsTotal = 0;
     items.forEach(item => {
       itemsTotal += item.price * item.quantity;

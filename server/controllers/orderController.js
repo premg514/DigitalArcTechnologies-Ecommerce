@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const { getIO } = require('../config/socket');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -108,6 +109,16 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    // Emit socket event
+    try {
+      const io = getIO();
+      io.emit('invalidate_query', ['admin-orders']);
+      io.emit('invalidate_query', ['orders', 'my-orders']); // Fixed
+      io.emit('invalidate_query', ['products']); // Stock levels changed
+    } catch (error) {
+      console.error('Socket emit error:', error);
+    }
+
     res.status(201).json({
       success: true,
       data: order,
@@ -204,12 +215,17 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    order.orderStatus = status;
-    order.timeline.push({
-      status: status.charAt(0).toUpperCase() + status.slice(1),
-      comment: `Order status updated to ${status}`,
-      timestamp: Date.now()
-    });
+    // Only add status timeline entry if status has changed
+    const statusChanged = order.orderStatus !== status;
+
+    if (statusChanged) {
+      order.orderStatus = status;
+      order.timeline.push({
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        comment: `Order status updated to ${status}`,
+        timestamp: Date.now()
+      });
+    }
 
     if (status === 'delivered') {
       order.isDelivered = true;
@@ -241,6 +257,17 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     await order.save();
+
+    // Emit socket event
+    try {
+      const io = getIO();
+      io.emit('invalidate_query', ['admin-orders']);
+      io.emit('invalidate_query', ['orders', 'my-orders']); // Fixed to match client key
+      io.emit('invalidate_query', ['admin-order', req.params.id]);
+      io.emit('invalidate_query', ['order', req.params.id]); // Added for customer order details
+    } catch (error) {
+      console.error('Socket emit error:', error);
+    }
 
     res.status(200).json({
       success: true,
@@ -466,6 +493,18 @@ exports.cancelOrder = async (req, res) => {
     }
 
     await order.save();
+
+    // Emit socket event
+    try {
+      const io = getIO();
+      io.emit('invalidate_query', ['admin-orders']);
+      io.emit('invalidate_query', ['orders', 'my-orders']); // Fixed
+      io.emit('invalidate_query', ['admin-order', req.params.id]);
+      io.emit('invalidate_query', ['order', req.params.id]); // Fixed
+      io.emit('invalidate_query', ['products']); // Stock restored
+    } catch (error) {
+      console.error('Socket emit error:', error);
+    }
 
     res.status(200).json({
       success: true,
