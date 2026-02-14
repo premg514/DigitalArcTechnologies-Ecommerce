@@ -37,7 +37,7 @@ export default function OrderList({ orders }: OrderListProps) {
         return (
             <div className="text-center py-12">
                 <p className="text-zinc-500 mb-4">No orders found.</p>
-                <Link href="/products">
+                <Link href="/">
                     <Button variant="outline">Start Shopping</Button>
                 </Link>
             </div>

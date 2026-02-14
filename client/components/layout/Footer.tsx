@@ -134,15 +134,10 @@ export default function Footer() {
                             © {new Date().getFullYear()} Amrutha. All rights reserved.
                         </p>
                         <div className="flex flex-wrap justify-center gap-6 text-sm">
-                            <Link href="/privacy" className="text-sage-muted hover:text-primary transition-colors">
-                                Privacy Policy
+                            <Link href="www.digitalarc.space" className="text-sage-muted hover:text-primary transition-colors">
+                                Developed by Digital Arc Technologies
                             </Link>
-                            <Link href="/terms" className="text-sage-muted hover:text-primary transition-colors">
-                                Terms of Service
-                            </Link>
-                            <Link href="/sitemap" className="text-sage-muted hover:text-primary transition-colors">
-                                Sitemap
-                            </Link>
+
                         </div>
                     </div>
                 </div>
