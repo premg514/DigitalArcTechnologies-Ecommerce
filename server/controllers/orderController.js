@@ -136,11 +136,21 @@ exports.createOrder = async (req, res) => {
 // @access  Private
 exports.getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const { page = 1, limit = 10 } = req.query;
+
+    const orders = await Order.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit));
+
+    const total = await Order.countDocuments({ user: req.user._id });
 
     res.status(200).json({
       success: true,
       count: orders.length,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
       data: orders,
     });
   } catch (error) {

@@ -28,12 +28,26 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'https://digital-arc-technologies-ecommerce-two.vercel.app'
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   })
 );
 
@@ -60,6 +74,16 @@ if (process.env.NODE_ENV === 'development') {
 // Serve static files from uploads directory
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Root route for debugging
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'E-Commerce API is live',
+    environment: process.env.NODE_ENV,
+    health: '/health'
+  });
+});
 
 // Rate limiting
 const limiter = rateLimit({
