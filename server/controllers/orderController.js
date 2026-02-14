@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { getIO } = require('../config/socket');
 const { sendOrderConfirmation } = require('../utils/emailService');
+const razorpay = require('../config/razorpay');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -195,21 +196,27 @@ exports.getOrderById = async (req, res) => {
       });
     }
 
-    // Check if order is cancellable based on products
-    let isOrderCancellable = true;
+    // Check if order items are individual cancellable
+    const updatedOrderItems = [];
+    let isAnyItemCancellable = false;
+
     for (const item of order.orderItems) {
       const product = await Product.findById(item.product);
-      if (product && !product.isCancellable) {
-        isOrderCancellable = false;
-        break;
-      }
+      const isItemCancellable = product ? product.isCancellable : true;
+      if (isItemCancellable && !item.isCancelled) isAnyItemCancellable = true;
+
+      updatedOrderItems.push({
+        ...item._doc,
+        isCancellable: isItemCancellable
+      });
     }
 
     res.status(200).json({
       success: true,
       data: {
         ...order._doc,
-        isCancellable: isOrderCancellable
+        orderItems: updatedOrderItems,
+        isCancellable: isAnyItemCancellable // At least one item can be cancelled
       },
     });
   } catch (error) {
@@ -310,154 +317,12 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-const razorpay = require('../config/razorpay');
 
-// @desc    Request return
-// @route   PUT /api/orders/:id/return
+
+// @desc    Cancel specific order item
+// @route   PUT /api/orders/:id/items/:itemId/cancel
 // @access  Private
-exports.requestReturn = async (req, res) => {
-  try {
-    const { reason } = req.body;
-    const order = await Order.findById(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
-      });
-    }
-
-    if (order.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized',
-      });
-    }
-
-    if (order.orderStatus !== 'delivered') {
-      return res.status(400).json({
-        success: false,
-        message: 'Order must be delivered to request a return',
-      });
-    }
-
-    // Check for 7-day return window
-    const returnWindowDays = 7;
-    const returnWindowMs = returnWindowDays * 24 * 60 * 60 * 1000;
-    const timeSinceDelivery = Date.now() - new Date(order.deliveredAt).getTime();
-
-    if (timeSinceDelivery > returnWindowMs) {
-      return res.status(400).json({
-        success: false,
-        message: `Return window of ${returnWindowDays} days has expired`,
-      });
-    }
-
-    if (order.returnRequest && order.returnRequest.status !== 'none') {
-      return res.status(400).json({
-        success: false,
-        message: 'Return already requested',
-      });
-    }
-
-    order.returnRequest = {
-      reason,
-      status: 'pending',
-      requestedAt: Date.now(),
-    };
-
-    order.orderStatus = 'return_requested';
-    order.timeline.push({
-      status: 'Return Requested',
-      comment: `Reason: ${reason}`,
-      timestamp: Date.now()
-    });
-
-    await order.save();
-
-    res.status(200).json({
-      success: true,
-      data: order,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// @desc    Update return status (Admin)
-// @route   PUT /api/orders/:id/return-status
-// @access  Private/Admin
-exports.updateReturnStatus = async (req, res) => {
-  try {
-    const { status, adminComment } = req.body; // status: 'approved' or 'rejected'
-    const order = await Order.findById(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    if (status === 'approved') {
-      // Initiate Refund Logic
-      if (order.isPaid && order.paymentMethod === 'razorpay') {
-        try {
-          const paymentId = order.paymentResult.razorpayPaymentId;
-          const refund = await razorpay.payments.refund(paymentId, {
-            "speed": "normal",
-            "notes": {
-              "reason": "Return Request Approved"
-            }
-          });
-
-          order.paymentResult.refundId = refund.id;
-          order.paymentResult.refundStatus = refund.status;
-          order.paymentResult.refundAmount = refund.amount;
-          order.paymentResult.refundedAt = Date.now();
-        } catch (err) {
-          console.error("Refund failed", err);
-          return res.status(500).json({ success: false, message: 'Refund failed' });
-        }
-      }
-      order.orderStatus = 'returned';
-      order.timeline.push({
-        status: 'Return Approved',
-        comment: adminComment || 'Return approved and refund initiated.',
-        timestamp: Date.now()
-      });
-    } else if (status === 'rejected') {
-      order.orderStatus = 'delivered'; // Revert to delivered or keep as is? Maybe specific status?
-      // Let's keep it delivered but mark return as rejected
-      order.timeline.push({
-        status: 'Return Rejected',
-        comment: adminComment || 'Return request rejected.',
-        timestamp: Date.now()
-      });
-    }
-
-    order.returnRequest.status = status;
-    order.returnRequest.resolvedAt = Date.now();
-    order.returnRequest.adminComment = adminComment;
-
-    await order.save();
-
-    res.status(200).json({
-      success: true,
-      data: order,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// @desc    Cancel order
-// @route   PUT /api/orders/:id/cancel
-// @access  Private
-exports.cancelOrder = async (req, res) => {
+exports.cancelOrderItem = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
@@ -472,75 +337,111 @@ exports.cancelOrder = async (req, res) => {
     if (order.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to cancel this order',
+        message: 'Not authorized to cancel this item',
       });
-    }
-
-    // Check if any product in the order is non-cancellable
-    for (const item of order.orderItems) {
-      const product = await Product.findById(item.product);
-      if (product && !product.isCancellable) {
-        return res.status(400).json({
-          success: false,
-          message: `Order cannot be cancelled because it contains non-cancellable item: ${item.name}`,
-        });
-      }
     }
 
     // Only allow cancellation if order is pending or processing
     if (!['pending', 'processing'].includes(order.orderStatus)) {
       return res.status(400).json({
         success: false,
-        message: 'Order cannot be cancelled at this stage',
+        message: 'Item cannot be cancelled at this stage',
       });
     }
 
-    // Handle Refund if order is paid via Razorpay
+    const item = order.orderItems.id(req.params.itemId);
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found in order',
+      });
+    }
+
+    if (item.isCancelled) {
+      return res.status(400).json({
+        success: false,
+        message: 'Item is already cancelled',
+      });
+    }
+
+    // Check if product is cancellable
+    const product = await Product.findById(item.product);
+    if (product && !product.isCancellable) {
+      return res.status(400).json({
+        success: false,
+        message: `This item (${item.name}) is non-cancellable`,
+      });
+    }
+
+    // Handle Refund for this specific item if order is paid
     if (order.isPaid && order.paymentMethod === 'razorpay') {
       try {
         const paymentId = order.paymentResult.razorpayPaymentId;
 
+        // Calculate refund amount for this item
+        // Simple formula: item price * quantity
+        // Ensure it's an integer for Razorpay (paise)
+        const refundAmount = Math.round(item.price * item.quantity * 100);
+
+        console.log(`Initiating partial refund for Item ${item.name} (${item._id}): ${refundAmount} paise`);
+
         // Initiate refund via Razorpay
         const refund = await razorpay.payments.refund(paymentId, {
+          "amount": refundAmount,
           "speed": "normal",
           "notes": {
-            "reason": "Customer requested cancellation"
+            "reason": `Cancellation of ${item.name.substring(0, 100)}`,
+            "orderId": order._id.toString(),
+            "itemId": item._id.toString()
           }
         });
 
-        // Store refund details in order (optional but recommended)
-        order.paymentResult = {
-          ...order.paymentResult,
-          refundId: refund.id,
-          refundStatus: refund.status,
-          refundAmount: refund.amount,
-          refundedAt: new Date()
-        };
-
-        console.log(`Refund initiated for Order ${order._id}:`, refund);
+        // Store refund details in order
+        order.timeline.push({
+          status: 'Refund Initiated',
+          comment: `Refund of ${item.price * item.quantity} initiated for ${item.name}. Refund ID: ${refund.id}`,
+          timestamp: Date.now()
+        });
 
       } catch (refundError) {
-        console.error('Razorpay Refund Error:', refundError);
+        console.error('Razorpay Partial Refund Error:', {
+          message: refundError.message,
+          description: refundError.description,
+          code: refundError.code,
+          metadata: refundError.metadata
+        });
         return res.status(500).json({
           success: false,
-          message: 'Failed to process refund. Please contact support.',
-          error: refundError.message
+          message: 'Failed to process refund for this item. Please contact support.',
+          error: refundError.description || refundError.message
         });
       }
     }
 
-    order.orderStatus = 'cancelled';
-    order.cancelledAt = new Date();
+    // Mark as cancelled
+    item.isCancelled = true;
+    item.cancelledAt = new Date();
+
+    // Restore stock
+    await Product.findByIdAndUpdate(item.product, {
+      $inc: { stock: item.quantity },
+    });
+
     order.timeline.push({
-      status: 'Cancelled',
-      comment: 'Order cancelled by user',
+      status: 'Item Cancelled',
+      comment: `Item ${item.name} cancelled by user`,
       timestamp: Date.now()
     });
 
-    // Restore stock
-    for (const item of order.orderItems) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: item.quantity },
+    // Check if all items are now cancelled
+    const allItemsCancelled = order.orderItems.every(i => i.isCancelled);
+    if (allItemsCancelled) {
+      order.orderStatus = 'cancelled';
+      order.cancelledAt = new Date();
+      order.timeline.push({
+        status: 'Cancelled',
+        comment: 'Full order cancelled as all items were cancelled',
+        timestamp: Date.now()
       });
     }
 
@@ -550,17 +451,149 @@ exports.cancelOrder = async (req, res) => {
     try {
       const io = getIO();
       io.emit('invalidate_query', ['admin-orders']);
-      io.emit('invalidate_query', ['orders', 'my-orders']); // Fixed
+      io.emit('invalidate_query', ['orders', 'my-orders']);
       io.emit('invalidate_query', ['admin-order', req.params.id]);
-      io.emit('invalidate_query', ['order', req.params.id]); // Fixed
-      io.emit('invalidate_query', ['products']); // Stock restored
+      io.emit('invalidate_query', ['order', req.params.id]);
+      io.emit('invalidate_query', ['products']);
     } catch (error) {
       console.error('Socket emit error:', error);
     }
 
     res.status(200).json({
       success: true,
-      message: order.isPaid ? 'Order cancelled and refund initiated successfully' : 'Order cancelled successfully',
+      message: 'Item cancelled successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Cancel order (Modified to support item-wise cancellation logic)
+// @route   PUT /api/orders/:id/cancel
+// @access  Private
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to cancel this order',
+      });
+    }
+
+    if (!['pending', 'processing'].includes(order.orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order cannot be cancelled at this stage',
+      });
+    }
+
+    // Identify which items can be cancelled
+    const cancellableItems = [];
+    for (const item of order.orderItems) {
+      if (item.isCancelled) continue;
+
+      const product = await Product.findById(item.product);
+      if (product && product.isCancellable) {
+        cancellableItems.push(item);
+      }
+    }
+
+    if (cancellableItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No cancellable items found in this order',
+      });
+    }
+
+    // Proceed to cancel all cancellable items
+    let totalRefund = 0;
+    for (const item of cancellableItems) {
+      item.isCancelled = true;
+      item.cancelledAt = new Date();
+      totalRefund += (item.price * item.quantity);
+
+      // Restore stock
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { stock: item.quantity },
+      });
+    }
+
+    // Handle Refund if paid
+    if (order.isPaid && order.paymentMethod === 'razorpay' && totalRefund > 0) {
+      try {
+        const paymentId = order.paymentResult.razorpayPaymentId;
+        const refundAmountPaise = Math.round(totalRefund * 100);
+
+        console.log(`Initiating bulk refund for Order ${order._id}: ${refundAmountPaise} paise`);
+
+        await razorpay.payments.refund(paymentId, {
+          "amount": refundAmountPaise,
+          "speed": "normal",
+          "notes": {
+            "reason": "Customer cancelled all eligible items",
+            "orderId": order._id.toString()
+          }
+        });
+      } catch (refundError) {
+        console.error('Razorpay Bulk Refund Error:', {
+          message: refundError.message,
+          description: refundError.description,
+          code: refundError.code
+        });
+        // We continue anyway since items are marked cancelled in DB
+        // But maybe we should add a timeline entry about the failed refund?
+        order.timeline.push({
+          status: 'Refund Failed',
+          comment: `Automatic refund failed: ${refundError.description || refundError.message}. Please contact support for manual refund.`,
+          timestamp: Date.now()
+        });
+      }
+    }
+
+    // Check if whole order is now cancelled
+    const allItemsCancelled = order.orderItems.every(i => i.isCancelled);
+    if (allItemsCancelled) {
+      order.orderStatus = 'cancelled';
+      order.cancelledAt = new Date();
+    }
+
+    order.timeline.push({
+      status: 'Bulk Cancellation',
+      comment: `Cancelled ${cancellableItems.length} items from order`,
+      timestamp: Date.now()
+    });
+
+    await order.save();
+
+    // Emit socket event
+    try {
+      const io = getIO();
+      io.emit('invalidate_query', ['admin-orders']);
+      io.emit('invalidate_query', ['orders', 'my-orders']);
+      io.emit('invalidate_query', ['admin-order', req.params.id]);
+      io.emit('invalidate_query', ['order', req.params.id]);
+      io.emit('invalidate_query', ['products']);
+    } catch (error) {
+      console.error('Socket emit error:', error);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: allItemsCancelled ? 'Order cancelled successfully' : 'Eligible items cancelled successfully',
       data: order,
     });
   } catch (error) {

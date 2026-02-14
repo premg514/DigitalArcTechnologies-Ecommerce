@@ -33,8 +33,6 @@ const STATUS_OPTIONS = [
     { value: 'shipped', label: 'Shipped' },
     { value: 'delivered', label: 'Delivered' },
     { value: 'cancelled', label: 'Cancelled' },
-    { value: 'return_requested', label: 'Return Requested' },
-    { value: 'returned', label: 'Returned' },
 ];
 
 export default function AdminOrderDetailsPage() {
@@ -78,29 +76,7 @@ export default function AdminOrderDetailsPage() {
         }
     };
 
-    const updateReturnStatusMutation = useMutation({
-        mutationFn: async ({ status, comment }: { status: string; comment: string }) => {
-            await api.put(`/orders/${id}/return-status`, { status, adminComment: comment });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-order', id] });
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            toast.success('Return status updated successfully');
-            setIsUpdating(false);
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to update return status');
-            setIsUpdating(false);
-        },
-    });
 
-    const handleReturnStatusChange = (status: 'approved' | 'rejected') => {
-        const comment = prompt(`Enter comment for ${status} (optional):`);
-        if (comment !== null) {
-            setIsUpdating(true);
-            updateReturnStatusMutation.mutate({ status, comment });
-        }
-    };
 
     if (isLoading) {
         return (
@@ -259,53 +235,7 @@ export default function AdminOrderDetailsPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Return Management */}
-                    {
-                        order.returnRequest && order.returnRequest.status !== 'none' && (
-                            <Card className={`border-l-4 ${order.returnRequest.status === 'pending' ? 'border-l-yellow-500' :
-                                order.returnRequest.status === 'approved' ? 'border-l-green-500' :
-                                    'border-l-red-500'
-                                }`}>
-                                <CardHeader>
-                                    <CardTitle>Return Request</CardTitle>
-                                    <CardDescription>
-                                        Status: <span className="font-bold uppercase">{order.returnRequest.status}</span>
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="bg-muted/50 border border-muted p-3 rounded-md">
-                                        <p className="text-sm font-semibold text-primary">Reason:</p>
-                                        <p className="text-sm text-foreground">{order.returnRequest.reason}</p>
-                                    </div>
-                                    {order.returnRequest.status === 'pending' && (
-                                        <div className="flex gap-2">
-                                            <Button
-                                                className="w-full bg-green-600 hover:bg-green-700"
-                                                onClick={() => handleReturnStatusChange('approved')}
-                                                disabled={isUpdating}
-                                            >
-                                                Approve & Refund
-                                            </Button>
-                                            <Button
-                                                className="w-full"
-                                                variant="destructive"
-                                                onClick={() => handleReturnStatusChange('rejected')}
-                                                disabled={isUpdating}
-                                            >
-                                                Reject
-                                            </Button>
-                                        </div>
-                                    )}
-                                    {order.returnRequest.adminComment && (
-                                        <div className="bg-muted/50 border border-muted p-3 rounded-md">
-                                            <p className="text-sm font-semibold text-primary">Admin Comment:</p>
-                                            <p className="text-sm text-foreground">{order.returnRequest.adminComment}</p>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        )
-                    }
+
 
                     {/* Timeline */}
                     {

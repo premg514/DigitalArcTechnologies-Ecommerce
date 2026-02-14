@@ -37,8 +37,6 @@ const STATUS_OPTIONS = [
     'shipped',
     'delivered',
     'cancelled',
-    'return_requested',
-    'returned'
 ];
 
 export default function AdminOrdersPage() {
@@ -141,7 +139,7 @@ export default function AdminOrdersPage() {
                             <TabsTrigger
                                 key={option}
                                 value={option}
-                                className="capitalize px-4 py-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-transparent data-[state=active]:border-primary"
+                                className="capitalize px-4 py-2 rounded-md data-[state=active]:bg-primary data-[state=active]:!text-white border border-transparent data-[state=active]:border-primary"
                             >
                                 {option.replace('_', ' ')}
                             </TabsTrigger>

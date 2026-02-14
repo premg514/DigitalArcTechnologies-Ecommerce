@@ -48,18 +48,6 @@ export default function OrderStatusBadge({ status, className }: OrderStatusBadge
                     className: 'bg-primary/10 text-primary font-semibold hover:bg-primary/20',
                     icon: XCircle,
                 };
-            case 'return_requested':
-                return {
-                    label: 'Return Requested',
-                    className: 'bg-yellow-600/10 text-yellow-600 dark:text-yellow-400 font-semibold hover:bg-yellow-600/20',
-                    icon: Clock,
-                };
-            case 'returned':
-                return {
-                    label: 'Returned',
-                    className: 'bg-zinc-600/10 text-zinc-600 dark:text-zinc-400 font-semibold hover:bg-zinc-600/20',
-                    icon: CheckCircle2,
-                };
             default:
                 return {
                     label: status,

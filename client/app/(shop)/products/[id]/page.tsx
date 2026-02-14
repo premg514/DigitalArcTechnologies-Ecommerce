@@ -116,7 +116,6 @@ export default function ProductDetailPage() {
             image: product.images[0]?.url || '/placeholder.png',
             stock: product.stock,
         });
-        toast.success(`${product.name} added to cart!`);
     };
 
     const handleQuantityDecrease = () => {
@@ -164,8 +163,8 @@ export default function ProductDetailPage() {
                 </nav>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20 items-start">
-                    {/* Left: Product Images (7/12) */}
-                    <div className="lg:col-span-7 space-y-6">
+                    {/* Left: Product Images (5/12) */}
+                    <div className="lg:col-span-5 space-y-6">
                         {/* Main Image Container */}
                         <div className="relative aspect-square overflow-hidden rounded-lg bg-white organic-shadow-lg group">
                             <Image
@@ -180,12 +179,12 @@ export default function ProductDetailPage() {
                             {/* Badges */}
                             <div className="absolute top-6 left-6 flex flex-col gap-2">
                                 {discount > 0 && (
-                                    <div className="bg-secondary text-white text-sm font-bold px-4 py-2 rounded-full organic-shadow">
+                                    <div className="bg-secondary text-white text-sm font-semibold px-4 py-2 rounded-full organic-shadow">
                                         {discount}% OFF
                                     </div>
                                 )}
                                 {product.stock <= 5 && product.stock > 0 && (
-                                    <div className="bg-amber-500 text-white text-xs font-bold px-4 py-2 rounded-full organic-shadow uppercase tracking-wider">
+                                    <div className="bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-full organic-shadow uppercase tracking-wider">
                                         Only {product.stock} Left
                                     </div>
                                 )}
@@ -218,7 +217,7 @@ export default function ProductDetailPage() {
                                         key={index}
                                         onClick={() => setSelectedImage(index)}
                                         className={cn(
-                                            "relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-300 organic-shadow-sm",
+                                            "relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-300 organic-shadow-sm",
                                             selectedImage === index
                                                 ? 'border-secondary scale-95 ring-2 ring-secondary/20'
                                                 : 'border-white hover:border-secondary/40'
@@ -237,42 +236,42 @@ export default function ProductDetailPage() {
                         )}
                     </div>
 
-                    {/* Right: Product Info (5/12) */}
-                    <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24">
+                    {/* Right: Product Info (7/12) */}
+                    <div className="lg:col-span-7 space-y-8 lg:sticky lg:top-24">
                         <div className="space-y-4">
                             {/* Category & Rating */}
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-medium uppercase tracking-widest text-secondary">
+                                <span className="text-sm font-medium uppercase tracking-widest text-secondary">
                                     {product.category}
                                 </span>
                                 <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-zinc-100">
-                                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                                    <span className="text-sm font-semibold text-primary">{product.ratings.toFixed(1)}</span>
-                                    <span className="text-xs text-zinc-400 font-medium ml-1">
+                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-base font-medium text-primary">{product.ratings.toFixed(1)}</span>
+                                    <span className="text-sm text-zinc-400 font-medium ml-1">
                                         ({product.numReviews} reviews)
                                     </span>
                                 </div>
                             </div>
 
                             {/* Title */}
-                            <h1 className="text-2xl md:text-3xl font-heading font-semibold text-primary leading-tight">
+                            <h1 className="text-3xl md:text-4xl font-heading font-semibold text-primary leading-tight">
                                 {product.name}
                             </h1>
 
                             {/* Price */}
                             <div className="flex items-center gap-4 py-3">
                                 <div className="flex items-baseline gap-3">
-                                    <span className="text-2xl font-bold text-primary tracking-tight">
+                                    <span className="text-3xl font-semibold text-primary tracking-tight">
                                         {formatPrice(product.price)}
                                     </span>
                                     {product.compareAtPrice && (
-                                        <span className="text-lg text-zinc-400 line-through font-medium">
+                                        <span className="text-xl text-zinc-400 line-through font-medium">
                                             {formatPrice(product.compareAtPrice)}
                                         </span>
                                     )}
                                 </div>
                                 {discount > 0 && (
-                                    <span className="text-emerald-600 font-semibold text-sm">
+                                    <span className="text-emerald-600 font-medium text-sm">
                                         {discount}% OFF
                                     </span>
                                 )}
@@ -287,22 +286,22 @@ export default function ProductDetailPage() {
                                     product.stock > 0 ? "bg-emerald-500" : "bg-red-500"
                                 )} />
                                 <span className={cn(
-                                    "text-sm font-semibold",
+                                    "text-sm font-medium",
                                     product.stock > 0 ? "text-emerald-600" : "text-red-600"
                                 )}>
                                     {product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
                                 </span>
                             </div>
-                            <p className="text-zinc-500 leading-relaxed text-sm font-medium">
+                            <p className="text-zinc-500 leading-relaxed text-base font-normal">
                                 {product.description}
                             </p>
                         </div>
 
                         {/* Delivery Check Section */}
                         <div className="p-6 rounded-lg bg-white border border-zinc-100 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2 text-primary font-semibold">
+                            <div className="flex items-center gap-2 text-primary font-medium">
                                 <MapPin className="h-4 w-4 text-secondary" />
-                                <span className="text-sm">Delivery Availability</span>
+                                <span className="text-base">Delivery Availability</span>
                             </div>
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
@@ -323,14 +322,14 @@ export default function ProductDetailPage() {
                                 <Button
                                     onClick={handlePincodeCheck}
                                     variant="outline"
-                                    className="rounded-lg h-[42px] px-6 text-sm font-semibold"
+                                    className="rounded-lg h-[42px] px-6 text-sm font-medium"
                                 >
                                     Check
                                 </Button>
                             </div>
                             {pincodeStatus !== 'idle' && pincodeStatus !== 'checking' && (
                                 <p className={cn(
-                                    "text-xs font-semibold flex items-center gap-1.5",
+                                    "text-xs font-medium flex items-center gap-1.5",
                                     pincodeStatus === 'allowed' ? "text-emerald-600" : "text-red-500"
                                 )}>
                                     {pincodeStatus === 'allowed' ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
@@ -344,7 +343,7 @@ export default function ProductDetailPage() {
                             <div className="flex flex-wrap items-end gap-8">
                                 {/* Quantity */}
                                 <div className="space-y-3">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-zinc-400">Quantity</label>
+                                    <label className="text-sm font-semibold uppercase tracking-widest text-zinc-400">Quantity</label>
                                     <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-lg p-1 shadow-sm">
                                         <button
                                             onClick={handleQuantityDecrease}
@@ -353,7 +352,7 @@ export default function ProductDetailPage() {
                                         >
                                             <Minus className="h-4 w-4" />
                                         </button>
-                                        <span className="w-10 text-center font-semibold text-primary">{quantity}</span>
+                                        <span className="w-10 text-center font-medium text-primary">{quantity}</span>
                                         <button
                                             onClick={handleQuantityIncrease}
                                             disabled={quantity >= product.stock}
@@ -369,7 +368,7 @@ export default function ProductDetailPage() {
                                     onClick={handleAddToCart}
                                     disabled={product.stock === 0}
                                     size="lg"
-                                    className="flex-1 min-w-[200px] h-14 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold text-lg organic-shadow transition-all hover:-translate-y-1 active:scale-95 group"
+                                    className="flex-1 min-w-[200px] h-14 rounded-lg bg-primary hover:bg-primary-dark text-white font-semibold text-lg organic-shadow transition-all hover:-translate-y-1 active:scale-95 group"
                                 >
                                     <ShoppingCart className="mr-3 h-5 w-5 transition-transform group-hover:rotate-12" />
                                     Add to Cart
@@ -381,15 +380,15 @@ export default function ProductDetailPage() {
                                 <div className="flex items-center gap-3">
                                     <Truck className="h-4 w-4 text-secondary" />
                                     <div>
-                                        <p className="text-xs font-semibold text-primary">Priority Shipping</p>
-                                        <p className="text-[9px] text-zinc-400 font-medium uppercase">Doorstep Delivery</p>
+                                        <p className="text-sm font-medium text-primary">Priority Shipping</p>
+                                        <p className="text-[9px] text-zinc-400 font-normal uppercase">Doorstep Delivery</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <Shield className="h-4 w-4 text-secondary" />
                                     <div>
-                                        <p className="text-xs font-semibold text-primary">Pure & Organic</p>
-                                        <p className="text-[9px] text-zinc-400 font-medium uppercase">Lab Certified</p>
+                                        <p className="text-sm font-medium text-primary">Pure & Organic</p>
+                                        <p className="text-[9px] text-zinc-400 font-normal uppercase">Lab Certified</p>
                                     </div>
                                 </div>
                             </div>
@@ -402,8 +401,8 @@ export default function ProductDetailPage() {
                     <div className="grid lg:grid-cols-2 gap-16 xl:gap-24">
                         <div className="space-y-12">
                             <div className="space-y-4">
-                                <span className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">Community Feedback</span>
-                                <h2 className="text-3xl font-heading font-bold text-primary">Customer Reviews</h2>
+                                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-secondary">Community Feedback</span>
+                                <h2 className="text-3xl font-heading font-semibold text-primary">Customer Reviews</h2>
                             </div>
 
                             {product.reviews.length > 0 ? (
@@ -411,7 +410,7 @@ export default function ProductDetailPage() {
                                     {/* Rating Summary */}
                                     <div className="flex flex-col sm:flex-row items-center gap-10 p-8 rounded-2xl bg-white border border-zinc-100 shadow-sm">
                                         <div className="text-center sm:text-left space-y-2">
-                                            <div className="text-5xl font-bold text-primary tracking-tighter">
+                                            <div className="text-5xl font-semibold text-primary tracking-tighter">
                                                 {product.ratings.toFixed(1)}
                                             </div>
                                             <div className="flex gap-1 justify-center sm:justify-start">
@@ -420,7 +419,7 @@ export default function ProductDetailPage() {
                                                         key={i}
                                                         className={cn(
                                                             "h-4 w-4",
-                                                            i < Math.floor(product.ratings) ? 'fill-amber-400 text-amber-400' : 'text-zinc-200'
+                                                            i < Math.floor(product.ratings) ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-200'
                                                         )}
                                                     />
                                                 ))}
@@ -436,14 +435,14 @@ export default function ProductDetailPage() {
                                                 const percentage = (count / product.reviews.length) * 100;
                                                 return (
                                                     <div key={rating} className="flex items-center gap-3">
-                                                        <span className="text-xs font-bold text-zinc-500 w-4">{rating}</span>
+                                                        <span className="text-xs font-semibold text-zinc-500 w-4">{rating}</span>
                                                         <div className="flex-1 h-2 bg-zinc-50 rounded-full overflow-hidden border border-zinc-100">
                                                             <div
-                                                                className="h-full bg-amber-400 rounded-full transition-all duration-1000 ease-out"
+                                                                className="h-full bg-yellow-400 rounded-full transition-all duration-1000 ease-out"
                                                                 style={{ width: `${percentage}%` }}
                                                             />
                                                         </div>
-                                                        <span className="text-xs font-medium text-zinc-400 w-8 text-right">
+                                                        <span className="text-xs font-normal text-zinc-400 w-8 text-right">
                                                             {Math.round(percentage)}%
                                                         </span>
                                                     </div>
@@ -460,30 +459,30 @@ export default function ProductDetailPage() {
                                                 <div key={review._id} className="p-8 rounded-2xl bg-white border border-zinc-50 shadow-sm transition-all hover:shadow-md group">
                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                                         <div className="flex items-center gap-4">
-                                                            <div className="h-12 w-12 rounded-full bg-secondary/5 border border-secondary/10 flex items-center justify-center text-secondary font-bold text-sm">
+                                                            <div className="h-12 w-12 rounded-full bg-secondary/5 border border-secondary/10 flex items-center justify-center text-secondary font-semibold text-sm">
                                                                 {initials}
                                                             </div>
                                                             <div>
-                                                                <h4 className="font-bold text-primary">{review.name}</h4>
+                                                                <h4 className="font-semibold text-primary">{review.name}</h4>
                                                                 <div className="flex gap-0.5 mt-0.5">
                                                                     {Array.from({ length: 5 }).map((_, i) => (
                                                                         <Star
                                                                             key={i}
                                                                             className={cn(
                                                                                 "h-3 w-3",
-                                                                                i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-200'
+                                                                                i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-200'
                                                                             )}
                                                                         />
                                                                     ))}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-[9px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                                                        <div className="flex items-center gap-2 text-[9px] font-semibold text-emerald-600 uppercase tracking-wider bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
                                                             <CheckCircle2 className="h-3 w-3" />
                                                             Verified Purchase
                                                         </div>
                                                     </div>
-                                                    <p className="text-zinc-600 leading-relaxed text-sm md:text-base font-medium">
+                                                    <p className="text-zinc-600 leading-relaxed text-sm md:text-base font-normal">
                                                         {review.comment}
                                                     </p>
                                                     <div className="mt-6 pt-6 border-t border-zinc-50 flex justify-between items-center">
@@ -499,7 +498,7 @@ export default function ProductDetailPage() {
                                             <Button
                                                 variant="outline"
                                                 onClick={() => setVisibleReviews((prev) => prev + 5)}
-                                                className="w-full h-14 rounded-xl border-zinc-200 text-zinc-500 font-bold hover:bg-zinc-50 transition-all"
+                                                className="w-full h-14 rounded-xl border-zinc-200 text-zinc-500 font-semibold hover:bg-zinc-50 transition-all"
                                             >
                                                 Load More Reviews
                                                 <Plus className="ml-2 h-4 w-4" />
@@ -513,7 +512,7 @@ export default function ProductDetailPage() {
                                         <MessageSquare className="h-10 w-10 text-zinc-300" />
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-xl font-bold text-primary">No feedback yet</p>
+                                        <p className="text-xl font-semibold text-primary">No feedback yet</p>
                                         <p className="text-zinc-400 text-sm max-w-[260px]">Be the very first to share your experience with this premium product.</p>
                                     </div>
                                 </div>
@@ -525,14 +524,14 @@ export default function ProductDetailPage() {
                             <div className="p-10 rounded-3xl bg-cream/10 border border-zinc-100 shadow-sm relative overflow-hidden group">
                                 <div className="relative z-10 space-y-8">
                                     <div className="space-y-2">
-                                        <h3 className="text-2xl font-heading font-bold text-primary">Share Your Story</h3>
-                                        <p className="text-sm text-zinc-500 font-medium">Your feedback helps the community grow healthier together.</p>
+                                        <h3 className="text-2xl font-heading font-semibold text-primary">Share Your Story</h3>
+                                        <p className="text-sm text-zinc-500 font-normal">Your feedback helps the community grow healthier together.</p>
                                     </div>
 
                                     {user ? (
                                         <form onSubmit={handleReviewSubmit} className="space-y-8">
                                             <div className="space-y-4">
-                                                <label className="text-xs font-bold uppercase tracking-widest text-zinc-400">Your Rating</label>
+                                                <label className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Your Rating</label>
                                                 <div className="flex gap-4 p-4 bg-white rounded-2xl border border-zinc-50 shadow-sm w-fit">
                                                     {[1, 2, 3, 4, 5].map((s) => (
                                                         <button
@@ -544,7 +543,7 @@ export default function ProductDetailPage() {
                                                             <Star
                                                                 className={cn(
                                                                     "h-8 w-8 transition-colors",
-                                                                    s <= rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-100'
+                                                                    s <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-100'
                                                                 )}
                                                             />
                                                         </button>
@@ -553,7 +552,7 @@ export default function ProductDetailPage() {
                                             </div>
 
                                             <div className="space-y-4">
-                                                <label className="text-xs font-bold uppercase tracking-widest text-zinc-400">Detailed Feedback</label>
+                                                <label className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Detailed Feedback</label>
                                                 <textarea
                                                     value={comment}
                                                     onChange={(e) => setComment(e.target.value)}
@@ -567,7 +566,7 @@ export default function ProductDetailPage() {
                                             <Button
                                                 type="submit"
                                                 disabled={createReviewMutation.isPending}
-                                                className="w-full h-16 rounded-2xl bg-primary hover:bg-primary-dark text-white font-bold text-lg shadow-lg group transition-all"
+                                                className="w-full h-16 rounded-2xl bg-primary hover:bg-primary-dark text-white font-semibold text-lg shadow-lg group transition-all"
                                             >
                                                 {createReviewMutation.isPending ? (
                                                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -585,8 +584,8 @@ export default function ProductDetailPage() {
                                                 <Info className="h-8 w-8 text-secondary" />
                                             </div>
                                             <div className="space-y-2">
-                                                <p className="font-bold text-primary">Member Verification Required</p>
-                                                <p className="text-sm text-zinc-400 font-medium">Please sign in to your account to post your review and earn loyalty points.</p>
+                                                <p className="font-semibold text-primary">Member Verification Required</p>
+                                                <p className="text-sm text-zinc-400 font-normal">Please sign in to your account to post your review and earn loyalty points.</p>
                                             </div>
                                             <Link href="/login" className="block">
                                                 <Button className="w-full h-14 rounded-xl bg-primary text-white font-bold">

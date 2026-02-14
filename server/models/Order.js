@@ -24,6 +24,13 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
     min: [0, 'Price cannot be negative'],
   },
+  isCancelled: {
+    type: Boolean,
+    default: false,
+  },
+  cancelledAt: {
+    type: Date,
+  },
 });
 
 const orderSchema = new mongoose.Schema(
@@ -106,7 +113,7 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'return_requested', 'returned'],
+      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
       default: 'pending',
     },
     isPaid: {
@@ -131,17 +138,6 @@ const orderSchema = new mongoose.Schema(
     },
     trackingNumber: {
       type: String,
-    },
-    returnRequest: {
-      reason: String,
-      status: {
-        type: String,
-        enum: ['none', 'pending', 'approved', 'rejected'],
-        default: 'none',
-      },
-      requestedAt: Date,
-      resolvedAt: Date,
-      adminComment: String,
     },
     timeline: [
       {

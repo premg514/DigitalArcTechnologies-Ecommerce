@@ -30,7 +30,7 @@ export default function Header() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-2 group">
                         <div className="flex flex-col">
-                            <span className="text-2xl md:text-3xl font-heading font-bold text-primary">
+                            <span className="text-2xl md:text-3xl font-heading font-semibold text-primary">
                                 Amrutha
                             </span>
                             <span className="text-xs text-brown-muted tracking-wide">
@@ -58,6 +58,24 @@ export default function Header() {
                             About Us
                             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-secondary group-hover:w-full transition-all duration-300"></span>
                         </Link>
+
+                        <Link
+                            href="/contact"
+                            className="text-sm font-medium text-sage-soft hover:text-secondary transition-colors relative group"
+                        >
+                            Contact Us
+                            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-secondary group-hover:w-full transition-all duration-300"></span>
+                        </Link>
+
+                        {isAuthenticated && (
+                            <Link
+                                href="/orders"
+                                className="text-sm font-medium text-sage-soft hover:text-secondary transition-colors relative group"
+                            >
+                                Orders
+                                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-secondary group-hover:w-full transition-all duration-300"></span>
+                            </Link>
+                        )}
 
                         {isAuthenticated && user?.role === 'admin' && (
                             <Link
@@ -141,21 +159,6 @@ export default function Header() {
                             Home
                         </Link>
 
-                        <div className="px-4 py-2">
-                            <p className="text-xs font-semibold text-sage-muted uppercase tracking-wide mb-2">
-                                Categories
-                            </p>
-                            {categories.map((category) => (
-                                <Link
-                                    key={category.name}
-                                    href={category.href}
-                                    className="block py-2 text-sm text-sage-soft hover:text-secondary transition-colors"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    {category.name}
-                                </Link>
-                            ))}
-                        </div>
 
                         <Link
                             href="/about"
@@ -164,6 +167,24 @@ export default function Header() {
                         >
                             About Us
                         </Link>
+
+                        <Link
+                            href="/contact"
+                            className="block px-4 py-3 text-sm font-medium text-sage-soft hover:bg-cream-beige hover:text-secondary rounded-md transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Contact Us
+                        </Link>
+
+                        {isAuthenticated && (
+                            <Link
+                                href="/orders"
+                                className="block px-4 py-3 text-sm font-medium text-sage-soft hover:bg-cream-beige hover:text-secondary rounded-md transition-colors"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                My Orders
+                            </Link>
+                        )}
 
                         {isAuthenticated && user?.role === 'admin' && (
                             <Link

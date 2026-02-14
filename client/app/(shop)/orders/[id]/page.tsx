@@ -15,36 +15,14 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge';
 import Image from 'next/image';
-
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 
 export default function OrderDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
-    const [returnReason, setReturnReason] = useState('');
-    const [isReturning, setIsReturning] = useState(false);
-    const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
 
     const { data: order, isLoading, error } = useQuery({
         queryKey: ['order', id],
@@ -57,9 +35,10 @@ export default function OrderDetailsPage() {
 
     const queryClient = useQueryClient();
     const [isCancelling, setIsCancelling] = useState(false);
+    const [cancellingItemId, setCancellingItemId] = useState<string | null>(null);
 
     const handleCancelOrder = async () => {
-        if (!confirm('Are you sure you want to cancel this order? If paid, a refund will be initiated.')) {
+        if (!confirm('Are you sure you want to cancel all eligible items in this order? If paid, a refund will be initiated for those items.')) {
             return;
         }
 
@@ -67,7 +46,7 @@ export default function OrderDetailsPage() {
             setIsCancelling(true);
             await api.put(`/orders/${id}/cancel`);
             await queryClient.invalidateQueries({ queryKey: ['order', id] });
-            toast.success('Order cancelled successfully');
+            toast.success('Eligible items cancelled successfully');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to cancel order');
         } finally {
@@ -75,22 +54,20 @@ export default function OrderDetailsPage() {
         }
     };
 
-    const handleReturnOrder = async () => {
-        if (!returnReason) {
-            toast.error('Please provide a reason for return');
+    const handleCancelItem = async (itemId: string) => {
+        if (!confirm('Are you sure you want to cancel this item? If paid, a refund will be initiated.')) {
             return;
         }
 
         try {
-            setIsReturning(true);
-            await api.put(`/orders/${id}/return`, { reason: returnReason });
+            setCancellingItemId(itemId);
+            await api.put(`/orders/${id}/items/${itemId}/cancel`);
             await queryClient.invalidateQueries({ queryKey: ['order', id] });
-            toast.success('Return request submitted successfully');
-            setIsReturnDialogOpen(false);
+            toast.success('Item cancelled successfully');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to submit return request');
+            toast.error(error.response?.data?.message || 'Failed to cancel item');
         } finally {
-            setIsReturning(false);
+            setCancellingItemId(null);
         }
     };
 
@@ -115,13 +92,7 @@ export default function OrderDetailsPage() {
         );
     }
 
-    const isWithinReturnWindow = order.deliveredAt ? (
-        (Date.now() - new Date(order.deliveredAt).getTime()) <= (7 * 24 * 60 * 60 * 1000)
-    ) : false;
-
-    const canReturn = order.orderStatus === 'delivered' &&
-        isWithinReturnWindow &&
-        (!order.returnRequest || order.returnRequest.status === 'none');
+    const showBulkCancel = ['pending', 'processing'].includes(order.orderStatus) && order.isCancellable;
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -142,7 +113,7 @@ export default function OrderDetailsPage() {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                        {['pending', 'processing'].includes(order.orderStatus) && order.isCancellable && (
+                        {showBulkCancel && (
                             <Button
                                 variant="destructive"
                                 size="sm"
@@ -156,63 +127,12 @@ export default function OrderDetailsPage() {
                                         Wait...
                                     </>
                                 ) : (
-                                    'Cancel'
+                                    'Cancel Eligible Items'
                                 )}
                             </Button>
                         )}
-                        {canReturn && (
-                            <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                                        Return Item
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-[90vw] sm:max-w-md">
-                                    <DialogHeader>
-                                        <DialogTitle>Request Return</DialogTitle>
-                                        <DialogDescription>
-                                            Please let us know why you want to return this item.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                        <div className="space-y-2">
-                                            <Label>Reason for Return</Label>
-                                            <Select onValueChange={setReturnReason}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a reason" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="defective">Defective/Damaged</SelectItem>
-                                                    <SelectItem value="incorrect_item">Incorrect Item Received</SelectItem>
-                                                    <SelectItem value="quality_issue">Quality Not as Expected</SelectItem>
-                                                    <SelectItem value="other">Other</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        {returnReason === 'other' && (
-                                            <div className="space-y-2">
-                                                <Label>Additional Comments</Label>
-                                                <Textarea
-                                                    placeholder="Please provide more details..."
-                                                    onChange={(e) => setReturnReason(e.target.value)}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <DialogFooter className="gap-2 sm:gap-0">
-                                        <Button variant="outline" onClick={() => setIsReturnDialogOpen(false)}>Cancel</Button>
-                                        <Button onClick={handleReturnOrder} disabled={isReturning}>
-                                            {isReturning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                            Submit Request
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                        )}
                     </div>
                 </div>
-
-
 
                 {/* Timeline */}
                 {order.timeline && order.timeline.length > 0 && (
@@ -267,24 +187,6 @@ export default function OrderDetailsPage() {
                     </Card>
                 )}
 
-
-
-
-                {order.returnRequest && order.returnRequest.status !== 'none' && (
-                    <Card className={`border-l-4 ${order.returnRequest.status === 'pending' ? 'border-l-yellow-500 bg-yellow-50' :
-                        order.returnRequest.status === 'approved' ? 'border-l-green-500 bg-green-50' :
-                            'border-l-red-500 bg-red-50'
-                        }`}>
-                        <CardContent className="pt-6">
-                            <h3 className="font-bold text-lg mb-2">Return Request: {order.returnRequest.status.toUpperCase()}</h3>
-                            <p className="text-sm">Reason: {order.returnRequest.reason}</p>
-                            {order.returnRequest.adminComment && (
-                                <p className="text-sm mt-1 font-medium">Admin Comment: {order.returnRequest.adminComment}</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content - Order Items */}
                     <div className="lg:col-span-2 space-y-6">
@@ -292,14 +194,19 @@ export default function OrderDetailsPage() {
                             <CardHeader>
                                 <CardTitle>Order Items</CardTitle>
                                 <CardDescription>
-                                    {order.orderItems.length} items in this order
+                                    {order.orderItems?.length || 0} items in this order
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    {order.orderItems.map((item: any) => (
-                                        <div key={item._id} className="flex items-center gap-4 py-2 border-b last:border-0">
-                                            <div className="relative h-16 w-16 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-shrink-0">
+                                    {order.orderItems?.map((item: any) => (
+                                        <div key={item._id} className={cn(
+                                            "flex items-center gap-4 py-4 rounded-xl transition-all",
+                                            item.isCancelled
+                                                ? "bg-red-50/30 border border-primary/10 px-3"
+                                                : "bg-white/50 border border-primary/5 px-3 hover:bg-white/80"
+                                        )}>
+                                            <div className="relative h-20 w-20 rounded-lg overflow-hidden bg-white flex-shrink-0 border border-primary/10 shadow-sm">
                                                 {item.image && (
                                                     <Image
                                                         src={item.image}
@@ -308,19 +215,62 @@ export default function OrderDetailsPage() {
                                                         className="object-cover"
                                                     />
                                                 )}
+                                                {item.isCancelled && (
+                                                    <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] flex items-center justify-center">
+                                                        <span className="text-[10px] font-black text-white uppercase tracking-tighter bg-red-600 px-1.5 py-0.5 rounded shadow-sm">Cancelled</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
-                                                    {item.name}
-                                                </p>
-                                                <p className="text-sm text-zinc-500">
-                                                    Qty: {item.quantity} × {formatCurrency(item.price)}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                                                    {formatCurrency(item.price * item.quantity)}
-                                                </p>
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex-1">
+                                                        <p className={cn(
+                                                            "font-black text-primary text-base mb-0.5 leading-tight",
+                                                            item.isCancelled && "line-through text-primary/60"
+                                                        )}>
+                                                            {item.name}
+                                                        </p>
+                                                        <p className="text-sm font-bold text-foreground/80">
+                                                            Qty: {item.quantity} × {formatCurrency(item.price)}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <p className={cn(
+                                                            "font-black text-primary text-base",
+                                                            item.isCancelled && "text-primary/40"
+                                                        )}>
+                                                            {formatCurrency(item.price * item.quantity)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Individual Item Cancellation Button */}
+                                                {!item.isCancelled && ['pending', 'processing'].includes(order.orderStatus) && (
+                                                    <div className="mt-3 flex items-center justify-between">
+                                                        {item.isCancellable ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-8 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-100 hover:border-red-200"
+                                                                onClick={() => handleCancelItem(item._id)}
+                                                                disabled={!!cancellingItemId}
+                                                            >
+                                                                {cancellingItemId === item._id ? (
+                                                                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                                                                ) : 'Cancel Item'}
+                                                            </Button>
+                                                        ) : (
+                                                            <span className="text-[10px] font-black text-white uppercase tracking-tighter bg-primary px-2.5 py-1 rounded shadow-sm">
+                                                                Non-Cancellable
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {item.isCancelled && item.cancelledAt && (
+                                                    <p className="text-[10px] text-red-500 font-medium mt-1">
+                                                        Cancelled on {new Date(item.cancelledAt).toLocaleDateString()}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -340,35 +290,21 @@ export default function OrderDetailsPage() {
                                     </div>
                                     <Separator className="my-2" />
                                     <div className="flex justify-between font-bold text-lg">
-                                        <span>Total</span>
+                                        <span>Total Paid</span>
                                         <span>{formatCurrency(order.totalPrice)}</span>
                                     </div>
+                                    {order.orderItems.some((i: any) => i.isCancelled) && (
+                                        <p className="text-xs text-secondary italic text-right mt-1">
+                                            * Prices of cancelled items are automatically refunded to your original payment method.
+                                        </p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    {/* Sidebar - Return Policy, Shipping Info & Payment Info */}
+                    {/* Sidebar - Shipping Info & Payment Info */}
                     <div className="space-y-6">
-                        {order.orderStatus === 'delivered' && !order.returnRequest && (
-                            <Card className={isWithinReturnWindow ? 'border-primary/20 bg-primary/5' : 'bg-muted/30 border-muted'}>
-                                <CardHeader className="pb-3">
-                                    <CardTitle className={`text-base flex items-center gap-2 ${isWithinReturnWindow ? 'text-primary' : 'text-zinc-500'}`}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
-                                        {isWithinReturnWindow ? 'Return Policy' : 'Return Window'}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                        {isWithinReturnWindow ? (
-                                            <>Eligible for return until <span className="font-bold text-zinc-900 dark:text-zinc-100">{formatDate(new Date(new Date(order.deliveredAt).getTime() + 7 * 24 * 60 * 60 * 1000))}</span>.</>
-                                        ) : (
-                                            <>The 7-day return window expired on <span className="font-semibold">{formatDate(new Date(new Date(order.deliveredAt).getTime() + 7 * 24 * 60 * 60 * 1000))}</span>.</>
-                                        )}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Shipping Address</CardTitle>
@@ -376,14 +312,14 @@ export default function OrderDetailsPage() {
                             <CardContent>
                                 <address className="not-italic text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
                                     <p className="font-bold text-foreground text-base mb-1">
-                                        {order.shippingAddress.fullName || order.user?.name || 'Customer'}
+                                        {order.shippingAddress?.fullName || order.user?.name || 'Customer'}
                                     </p>
-                                    <p>{order.shippingAddress.address}</p>
+                                    <p>{order.shippingAddress?.address}</p>
                                     <p>
-                                        {order.shippingAddress.city}, {order.shippingAddress.zipCode}
+                                        {order.shippingAddress?.city}, {order.shippingAddress?.zipCode}
                                     </p>
-                                    <p>{order.shippingAddress.country}</p>
-                                    {order.shippingAddress.phone && (
+                                    <p>{order.shippingAddress?.country}</p>
+                                    {order.shippingAddress?.phone && (
                                         <p className="mt-2">📞 {order.shippingAddress.phone}</p>
                                     )}
                                 </address>

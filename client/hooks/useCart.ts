@@ -34,17 +34,17 @@ export const useCart = create<CartStore>()(
 
                     if (existingItem) {
                         // Update quantity if item already exists
-                        return {
-                            items: state.items.map((i) =>
-                                i.productId === item.productId
-                                    ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock) }
-                                    : i
-                            ),
-                        };
+                        const newItems = state.items.map((i) =>
+                            i.productId === item.productId
+                                ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock) }
+                                : i
+                        );
+                        toast.success(`${item.name} added to cart!`);
+                        return { items: newItems };
                     }
 
                     // Add new item
-                    toast.success('Added to cart');
+                    toast.success(`${item.name} added to cart!`);
                     return {
                         items: [...state.items, item],
                     };

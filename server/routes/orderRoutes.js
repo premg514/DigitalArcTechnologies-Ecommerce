@@ -6,8 +6,7 @@ const {
   getOrderById,
   updateOrderStatus,
   cancelOrder,
-  requestReturn,
-  updateReturnStatus,
+  cancelOrderItem,
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/auth');
 const { adminOnly } = require('../middleware/adminAuth');
@@ -39,16 +38,7 @@ router.put(
 // Cancel order
 router.put('/:id/cancel', protect, validateMongoId('id'), cancelOrder);
 
-// Request return
-router.put('/:id/return', protect, validateMongoId('id'), requestReturn);
-
-// Update return status (Admin)
-router.put(
-  '/:id/return-status',
-  protect,
-  adminOnly,
-  validateMongoId('id'),
-  updateReturnStatus
-);
+// Cancel specific order item
+router.put('/:id/items/:itemId/cancel', protect, validateMongoId('id'), cancelOrderItem);
 
 module.exports = router;

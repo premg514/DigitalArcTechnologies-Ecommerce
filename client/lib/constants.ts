@@ -68,3 +68,9 @@ export const API_ENDPOINTS = {
 } as const;
 
 export const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
+
+export const CONTACT_CONFIG = {
+    PHONE: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || '+91 98765 43210',
+    EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'support@amrutha.com',
+    WHATSAPP_PHONE: process.env.NEXT_PUBLIC_WHATSAPP_PHONE?.replace(/[\s\+]/g, '') || '919876543210',
+} as const;

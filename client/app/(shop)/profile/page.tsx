@@ -139,7 +139,7 @@ export default function ProfilePage() {
                                     {orders.slice(0, 4).map((order: any) => (
                                         <div
                                             key={order._id}
-                                            className="border rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                                            className="border border-zinc-100 dark:border-zinc-800 rounded-xl p-5 hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-300 hover:shadow-md group"
                                         >
                                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-zinc-100 dark:border-zinc-800">
                                                 <div className="space-y-1">
@@ -202,8 +202,8 @@ export default function ProfilePage() {
                                     {orders.length > 4 && (
                                         <div className="text-center pt-2">
                                             <Link href="/orders">
-                                                <Button variant="outline" className="w-full sm:w-auto">
-                                                    View All Orders
+                                                <Button variant="outline" className="w-full sm:w-auto font-semibold border-primary/20 hover:border-primary/40 text-primary">
+                                                    View All Orders ({response?.total || orders.length})
                                                 </Button>
                                             </Link>
                                         </div>

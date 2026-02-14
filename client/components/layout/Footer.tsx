@@ -2,19 +2,20 @@
 
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+import { CONTACT_CONFIG } from '@/lib/constants';
 
 export default function Footer() {
     return (
         <footer className="bg-white border-t border-[var(--border-light)]">
 
             <div className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
                     {/* Brand */}
                     <div className="space-y-4">
-                        <h3 className="text-2xl font-heading font-bold text-primary">
+                        <h3 className="text-2xl font-heading font-semibold text-primary">
                             Amrutha
                         </h3>
-                        <p className="text-sm text-sage-muted leading-relaxed">
+                        <p className="text-sm text-sage-muted leading-relaxed max-w-sm">
                             Your trusted source for pure, organic, and naturally grown products.
                             Bringing health and wellness to your doorstep.
                         </p>
@@ -34,41 +35,14 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Categories */}
-                    <div>
-                        <h4 className="text-base font-heading font-semibold text-sage-soft mb-4">
-                            Categories
-                        </h4>
-                        <ul className="space-y-2.5 text-sm">
-                            <li>
-                                <Link href="/products?category=First%20Polished%20Rice" className="text-sage-muted hover:text-primary transition-colors">
-                                    First Polished Rice
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/products?category=Jaggery" className="text-sage-muted hover:text-primary transition-colors">
-                                    Jaggery
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/products?category=Dry%20Fruits" className="text-sage-muted hover:text-primary transition-colors">
-                                    Dry Fruits
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/products" className="text-sage-muted hover:text-primary transition-colors font-medium">
-                                    Shop All
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
+
 
                     {/* Customer Service */}
-                    <div>
-                        <h4 className="text-base font-heading font-semibold text-sage-soft mb-4">
+                    <div className="space-y-6">
+                        <h4 className="text-base font-heading font-semibold text-sage-soft">
                             Customer Service
                         </h4>
-                        <ul className="space-y-2.5 text-sm">
+                        <ul className="space-y-3 text-sm flex flex-col">
                             <li>
                                 <Link href="/contact" className="text-sage-muted hover:text-primary transition-colors">
                                     Contact Us
@@ -84,25 +58,25 @@ export default function Footer() {
                     </div>
 
                     {/* Contact Info */}
-                    <div>
-                        <h4 className="text-base font-heading font-semibold text-sage-soft mb-4">
+                    <div className="space-y-6">
+                        <h4 className="text-base font-heading font-semibold text-sage-soft">
                             Get In Touch
                         </h4>
-                        <ul className="space-y-3 text-sm">
-                            <li className="flex items-start gap-2">
+                        <ul className="space-y-4 text-sm flex flex-col">
+                            <li className="flex items-start gap-3">
                                 <Phone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <p className="text-sage-muted">+91 1234567890</p>
-                                    <p className="text-xs text-sage-light">Mon-Sat, 9AM-6PM</p>
+                                    <p className="text-sage-muted">{CONTACT_CONFIG.PHONE}</p>
+                                    <p className="text-[10px] text-sage-light">Mon-Sat, 9AM-6PM</p>
                                 </div>
                             </li>
-                            <li className="flex items-start gap-2">
+                            <li className="flex items-start gap-3">
                                 <Mail className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                                <a href="mailto:info@amrutha.com" className="text-sage-muted hover:text-primary transition-colors">
-                                    info@amrutha.com
+                                <a href={`mailto:${CONTACT_CONFIG.EMAIL}`} className="text-sage-muted hover:text-primary transition-colors">
+                                    {CONTACT_CONFIG.EMAIL}
                                 </a>
                             </li>
-                            <li className="flex items-start gap-2">
+                            <li className="flex items-start gap-3">
                                 <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                 <p className="text-sage-muted">
                                     123 Organic Street,<br />

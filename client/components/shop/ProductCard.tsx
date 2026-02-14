@@ -72,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     return (
         <Card
-            className="group h-full overflow-hidden transition-all duration-300 organic-shadow hover:organic-shadow-xl border-none bg-white flex flex-col"
+            className="group h-full overflow-hidden transition-all duration-300 organic-shadow-lg hover:organic-shadow-xl border-none bg-white flex flex-col"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
@@ -102,11 +102,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {/* Badge (Winter Special / Discount) */}
                 <div className="absolute top-0 right-0 p-3 flex flex-col items-end gap-2">
                     {discount > 0 ? (
-                        <div className="bg-secondary-terracotta text-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-bl-lg shadow-sm">
+                        <div className="bg-secondary-terracotta text-white px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-bl-lg shadow-sm">
                             {discount}% OFF
                         </div>
                     ) : (
-                        <div className="bg-[#41888F] text-white px-3 py-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider rounded-bl-lg shadow-sm">
+                        <div className="bg-[#41888F] text-white px-3 py-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider rounded-bl-lg shadow-sm">
                             <span>Special Offer</span>
                             <Heart className="h-3 w-3 fill-white" />
                         </div>
@@ -116,7 +116,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {/* Out of Stock Overlay */}
                 {product.stock === 0 && (
                     <div className="absolute inset-0 bg-primary-maroon/40 flex items-center justify-center backdrop-blur-[2px]">
-                        <span className="bg-white text-primary-maroon px-4 py-2 rounded-md font-bold text-xs uppercase tracking-widest shadow-lg">
+                        <span className="bg-white text-primary-maroon px-4 py-2 rounded-md font-semibold text-xs uppercase tracking-widest shadow-lg">
                             Sold Out
                         </span>
                     </div>
@@ -126,11 +126,11 @@ export default function ProductCard({ product }: ProductCardProps) {
             <CardContent className="p-4 flex-grow flex flex-col">
                 <div className="flex justify-between items-start gap-2 mb-1">
                     <Link href={`/products/${product._id}`}>
-                        <h3 className="font-heading font-semibold text-lg text-primary-maroon line-clamp-2 hover:text-secondary-terracotta transition-colors">
+                        <h3 className="font-heading font-medium text-lg text-primary-maroon line-clamp-2 hover:text-secondary-terracotta transition-colors">
                             {product.name}
                         </h3>
                     </Link>
-                    <span className="text-lg font-bold text-text-dark whitespace-nowrap">
+                    <span className="text-lg font-semibold text-text-dark whitespace-nowrap">
                         {formatPrice(product.price)}
                     </span>
                 </div>
@@ -146,11 +146,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                         {[...Array(5)].map((_, i) => (
                             <Star
                                 key={i}
-                                className={`h-3.5 w-3.5 ${i < Math.floor(product.ratings) ? 'fill-accent-golden text-accent-golden' : 'text-border-medium'}`}
+                                className={`h-3.5 w-3.5 ${i < Math.floor(product.ratings) ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-200'}`}
                             />
                         ))}
                     </div>
-                    <span className="text-xs font-semibold text-text-soft">{product.ratings.toFixed(1)}</span>
+                    <span className="text-xs font-medium text-text-soft">{product.ratings.toFixed(1)}</span>
                     <span className="text-[10px] text-text-light font-medium uppercase tracking-tight">
                         | {product.numReviews} Reviews
                     </span>
@@ -166,7 +166,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         >
                             <Minus className="h-4 w-4" />
                         </button>
-                        <span className="text-sm font-bold text-text-dark px-4">
+                        <span className="text-sm font-semibold text-text-dark px-4">
                             {quantity}
                         </span>
                         <button
@@ -184,7 +184,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <Button
                     onClick={handleAddToCart}
                     disabled={product.stock === 0}
-                    className="w-full bg-secondary hover:bg-secondary-dark text-white font-bold text-sm uppercase tracking-widest py-6 rounded-md transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:transform-none"
+                    className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold text-sm uppercase tracking-widest py-6 rounded-md transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:transform-none"
                 >
                     Add to Cart
                 </Button>
