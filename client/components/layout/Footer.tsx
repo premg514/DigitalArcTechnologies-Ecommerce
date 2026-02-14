@@ -75,25 +75,11 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/track-order" className="text-sage-muted hover:text-primary transition-colors">
-                                    Track Order
+                                <Link href="/orders" className="text-sage-muted hover:text-primary transition-colors">
+                                    Track Orders
                                 </Link>
                             </li>
-                            <li>
-                                <Link href="/shipping" className="text-sage-muted hover:text-primary transition-colors">
-                                    Shipping & Delivery
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/returns" className="text-sage-muted hover:text-primary transition-colors">
-                                    Refund & Cancellation
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/faq" className="text-sage-muted hover:text-primary transition-colors">
-                                    FAQ
-                                </Link>
-                            </li>
+
                         </ul>
                     </div>
 
@@ -134,7 +120,12 @@ export default function Footer() {
                             © {new Date().getFullYear()} Amrutha. All rights reserved.
                         </p>
                         <div className="flex flex-wrap justify-center gap-6 text-sm">
-                            <Link href="www.digitalarc.space" className="text-sage-muted hover:text-primary transition-colors">
+                            <Link
+                                href="https://www.digitalarc.space"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sage-muted hover:text-primary transition-colors"
+                            >
                                 Developed by Digital Arc Technologies
                             </Link>
 

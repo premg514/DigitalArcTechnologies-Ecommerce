@@ -78,8 +78,8 @@ const config: Config = {
                 ring: 'var(--secondary-terracotta)',
             },
             fontFamily: {
-                heading: ['Playfair Display', 'serif'],
-                body: ['Inter', 'sans-serif'],
+                heading: ['"Gotham Medium"', 'var(--font-sans)', 'Montserrat', 'sans-serif'],
+                body: ['"Gotham Medium"', 'var(--font-sans)', 'Montserrat', 'sans-serif'],
             },
             boxShadow: {
                 'organic': '0 4px 6px -1px rgba(122, 31, 31, 0.12)',

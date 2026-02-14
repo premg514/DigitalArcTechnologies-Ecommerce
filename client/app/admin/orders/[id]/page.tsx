@@ -33,6 +33,8 @@ const STATUS_OPTIONS = [
     { value: 'shipped', label: 'Shipped' },
     { value: 'delivered', label: 'Delivered' },
     { value: 'cancelled', label: 'Cancelled' },
+    { value: 'return_requested', label: 'Return Requested' },
+    { value: 'returned', label: 'Returned' },
 ];
 
 export default function AdminOrderDetailsPage() {
@@ -271,9 +273,9 @@ export default function AdminOrderDetailsPage() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="bg-zinc-50 dark:bg-zinc-800 p-3 rounded-md">
-                                        <p className="text-sm font-medium">Reason:</p>
-                                        <p className="text-sm text-zinc-600 dark:text-zinc-400">{order.returnRequest.reason}</p>
+                                    <div className="bg-muted/50 border border-muted p-3 rounded-md">
+                                        <p className="text-sm font-semibold text-primary">Reason:</p>
+                                        <p className="text-sm text-foreground">{order.returnRequest.reason}</p>
                                     </div>
                                     {order.returnRequest.status === 'pending' && (
                                         <div className="flex gap-2">
@@ -295,9 +297,9 @@ export default function AdminOrderDetailsPage() {
                                         </div>
                                     )}
                                     {order.returnRequest.adminComment && (
-                                        <div className="bg-zinc-50 dark:bg-zinc-800 p-3 rounded-md">
-                                            <p className="text-sm font-medium">Admin Comment:</p>
-                                            <p className="text-sm text-zinc-600 dark:text-zinc-400">{order.returnRequest.adminComment}</p>
+                                        <div className="bg-muted/50 border border-muted p-3 rounded-md">
+                                            <p className="text-sm font-semibold text-primary">Admin Comment:</p>
+                                            <p className="text-sm text-foreground">{order.returnRequest.adminComment}</p>
                                         </div>
                                     )}
                                 </CardContent>

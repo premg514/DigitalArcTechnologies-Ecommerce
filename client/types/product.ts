@@ -29,6 +29,7 @@ export interface Product {
   reviews: Review[];
   isFeatured: boolean;
   isActive: boolean;
+  isCancellable: boolean;
   tags: string[];
   specifications?: Record<string, string>;
   weight?: number;

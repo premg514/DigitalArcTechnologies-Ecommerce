@@ -9,6 +9,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Address } from '@/types/user';
 import { useAddress } from '@/hooks/useAddress';
+import { toast } from 'react-hot-toast';
+import api from '@/lib/api';
+import { Loader2 } from 'lucide-react';
 
 interface AddressFormProps {
     onSuccess: () => void;
@@ -19,8 +22,9 @@ interface AddressFormProps {
 export default function AddressForm({ onSuccess, onCancel, initialData }: AddressFormProps) {
     const { addAddress, updateAddress } = useAddress();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDetecting, setIsDetecting] = useState(false);
 
-    const { register, handleSubmit, formState: { errors } } = useForm<Address>({
+    const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<Address>({
         defaultValues: initialData || {
             street: '',
             city: '',
@@ -32,17 +36,65 @@ export default function AddressForm({ onSuccess, onCancel, initialData }: Addres
         },
     });
 
+    const zipCode = watch('zipCode');
+
+    const fetchPincodeDetails = async (pincode: string) => {
+        if (pincode.length !== 6) return;
+
+        try {
+            setIsDetecting(true);
+            const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            const data = await response.json();
+
+            if (data[0].Status === 'Success') {
+                const postOffice = data[0].PostOffice[0];
+                setValue('city', postOffice.Block);
+                setValue('state', postOffice.State);
+                toast.success(`Detected: ${postOffice.Block}, ${postOffice.State}`);
+            }
+        } catch (error) {
+            console.error('Pincode detection error:', error);
+        } finally {
+            setIsDetecting(false);
+        }
+    };
+
+    // Trigger detection when zipCode changes to 6 digits
+    useState(() => {
+        if (zipCode?.length === 6) {
+            fetchPincodeDetails(zipCode);
+        }
+    });
+
+    const onZipCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value.replace(/\D/g, '');
+        setValue('zipCode', val);
+        if (val.length === 6) {
+            fetchPincodeDetails(val);
+        }
+    };
+
     const onSubmit = async (data: Address) => {
         setIsSubmitting(true);
         try {
+            // Check if pincode is allowed
+            const { data: pincodeCheck } = await api.get(`/pincodes/check/${data.zipCode}`);
+
+            if (!pincodeCheck.isAllowed) {
+                toast.error(pincodeCheck.message || 'Shipping is not available for this pincode');
+                setIsSubmitting(false);
+                return;
+            }
+
             if (initialData?._id) {
                 await updateAddress.mutateAsync({ id: initialData._id, address: data });
             } else {
                 await addAddress.mutateAsync(data);
             }
             onSuccess();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save address:', error);
+            toast.error(error.response?.data?.message || 'Failed to save address');
         } finally {
             setIsSubmitting(false);
         }
@@ -60,7 +112,7 @@ export default function AddressForm({ onSuccess, onCancel, initialData }: Addres
                         <Input
                             id="street"
                             {...register('street', { required: 'Street address is required' })}
-                            placeholder="123 Main St"
+                            placeholder="Door No, Street name, Area"
                         />
                         {errors.street && <p className="text-sm text-red-500">{errors.street.message}</p>}
                     </div>
@@ -98,12 +150,25 @@ export default function AddressForm({ onSuccess, onCancel, initialData }: Addres
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="zipCode">ZIP Code</Label>
-                            <Input
-                                id="zipCode"
-                                {...register('zipCode', { required: 'ZIP Code is required' })}
-                                placeholder="ZIP Code"
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="zipCode"
+                                    {...register('zipCode', {
+                                        required: 'ZIP Code is required',
+                                        onChange: onZipCodeChange
+                                    })}
+                                    placeholder="ZIP Code"
+                                    maxLength={6}
+                                    className={isDetecting ? 'pr-10' : ''}
+                                />
+                                {isDetecting && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                        <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                                    </div>
+                                )}
+                            </div>
                             {errors.zipCode && <p className="text-sm text-red-500">{errors.zipCode.message}</p>}
+                            {isDetecting && <p className="text-xs text-blue-600 animate-pulse">Detecting address details...</p>}
                         </div>
                     </div>
 

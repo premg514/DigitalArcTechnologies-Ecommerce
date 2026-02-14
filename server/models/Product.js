@@ -115,6 +115,10 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isCancellable: {
+      type: Boolean,
+      default: false,
+    },
     tags: [String],
     specifications: {
       type: Map,

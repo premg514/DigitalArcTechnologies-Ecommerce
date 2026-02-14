@@ -58,6 +58,7 @@ const productSchema = z.object({
     category: z.string().min(1, 'Category is required'),
     stock: z.coerce.number().min(0, 'Stock must be positive'),
     isActive: z.boolean().default(true),
+    isCancellable: z.boolean().default(false),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -92,6 +93,7 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
             stock: 0,
             category: 'Other',
             isActive: true,
+            isCancellable: false,
         };
 
     const form = useForm<ProductFormValues>({
@@ -330,6 +332,27 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
                                                     <FormLabel>Active Status</FormLabel>
                                                     <FormDescription>
                                                         Product is visible in the shop
+                                                    </FormDescription>
+                                                </div>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="isCancellable"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                                <FormControl>
+                                                    <Checkbox
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                    />
+                                                </FormControl>
+                                                <div className="space-y-1 leading-none">
+                                                    <FormLabel>Cancellable</FormLabel>
+                                                    <FormDescription>
+                                                        Customers can cancel order after purchase
                                                     </FormDescription>
                                                 </div>
                                             </FormItem>

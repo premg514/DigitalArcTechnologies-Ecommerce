@@ -15,6 +15,7 @@ import {
     LogOut,
     User,
     Home,
+    MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -22,6 +23,7 @@ const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Shipping', href: '/admin/pincodes', icon: MapPin },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 

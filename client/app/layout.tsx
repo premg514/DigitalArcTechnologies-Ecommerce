@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import SocketProvider from "@/components/providers/SocketProvider";
 import ScrollToTop from "@/components/layout/ScrollToTop";
 
-const playfair = Playfair_Display({
-  variable: "--font-heading",
+const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
+  variable: "--font-sans",
   weight: ["300", "400", "500", "600", "700"],
 });
 
@@ -30,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${playfair.variable} ${inter.variable} antialiased`}
+        className={`${montserrat.variable} font-sans antialiased`}
       >
         <QueryProvider>
           <SocketProvider>

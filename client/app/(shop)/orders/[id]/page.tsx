@@ -115,7 +115,13 @@ export default function OrderDetailsPage() {
         );
     }
 
-    const canReturn = order.orderStatus === 'delivered' && (!order.returnRequest || order.returnRequest.status === 'none');
+    const isWithinReturnWindow = order.deliveredAt ? (
+        (Date.now() - new Date(order.deliveredAt).getTime()) <= (7 * 24 * 60 * 60 * 1000)
+    ) : false;
+
+    const canReturn = order.orderStatus === 'delivered' &&
+        isWithinReturnWindow &&
+        (!order.returnRequest || order.returnRequest.status === 'none');
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -136,7 +142,7 @@ export default function OrderDetailsPage() {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                        {['pending', 'processing'].includes(order.orderStatus) && (
+                        {['pending', 'processing'].includes(order.orderStatus) && order.isCancellable && (
                             <Button
                                 variant="destructive"
                                 size="sm"
@@ -157,7 +163,7 @@ export default function OrderDetailsPage() {
                         {canReturn && (
                             <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                                         Return Item
                                     </Button>
                                 </DialogTrigger>
@@ -205,6 +211,8 @@ export default function OrderDetailsPage() {
                         )}
                     </div>
                 </div>
+
+
 
                 {/* Timeline */}
                 {order.timeline && order.timeline.length > 0 && (
@@ -260,7 +268,8 @@ export default function OrderDetailsPage() {
                 )}
 
 
-                {/* Return Status Banner */}
+
+
                 {order.returnRequest && order.returnRequest.status !== 'none' && (
                     <Card className={`border-l-4 ${order.returnRequest.status === 'pending' ? 'border-l-yellow-500 bg-yellow-50' :
                         order.returnRequest.status === 'approved' ? 'border-l-green-500 bg-green-50' :
@@ -339,16 +348,35 @@ export default function OrderDetailsPage() {
                         </Card>
                     </div>
 
-                    {/* Sidebar - Shipping Info & Payment Info */}
+                    {/* Sidebar - Return Policy, Shipping Info & Payment Info */}
                     <div className="space-y-6">
+                        {order.orderStatus === 'delivered' && !order.returnRequest && (
+                            <Card className={isWithinReturnWindow ? 'border-primary/20 bg-primary/5' : 'bg-muted/30 border-muted'}>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className={`text-base flex items-center gap-2 ${isWithinReturnWindow ? 'text-primary' : 'text-zinc-500'}`}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                                        {isWithinReturnWindow ? 'Return Policy' : 'Return Window'}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                        {isWithinReturnWindow ? (
+                                            <>Eligible for return until <span className="font-bold text-zinc-900 dark:text-zinc-100">{formatDate(new Date(new Date(order.deliveredAt).getTime() + 7 * 24 * 60 * 60 * 1000))}</span>.</>
+                                        ) : (
+                                            <>The 7-day return window expired on <span className="font-semibold">{formatDate(new Date(new Date(order.deliveredAt).getTime() + 7 * 24 * 60 * 60 * 1000))}</span>.</>
+                                        )}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Shipping Address</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <address className="not-italic text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
-                                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                                        {order.shippingAddress.fullName}
+                                    <p className="font-bold text-foreground text-base mb-1">
+                                        {order.shippingAddress.fullName || order.user?.name || 'Customer'}
                                     </p>
                                     <p>{order.shippingAddress.address}</p>
                                     <p>

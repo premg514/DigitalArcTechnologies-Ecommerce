@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { getIO } = require('../config/socket');
+const { sendOrderConfirmation } = require('../utils/emailService');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -102,6 +103,11 @@ exports.createOrder = async (req, res) => {
 
     const order = await Order.create(orderData);
 
+    // Send order confirmation email (do not await to avoid delaying response)
+    sendOrderConfirmation(order, req.user).catch((err) =>
+      console.error('Order confirmation email failed:', err)
+    );
+
     // Reduce stock quantity
     for (const item of orderItems) {
       await Product.findByIdAndUpdate(item.product, {
@@ -189,9 +195,22 @@ exports.getOrderById = async (req, res) => {
       });
     }
 
+    // Check if order is cancellable based on products
+    let isOrderCancellable = true;
+    for (const item of order.orderItems) {
+      const product = await Product.findById(item.product);
+      if (product && !product.isCancellable) {
+        isOrderCancellable = false;
+        break;
+      }
+    }
+
     res.status(200).json({
       success: true,
-      data: order,
+      data: {
+        ...order._doc,
+        isCancellable: isOrderCancellable
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -322,6 +341,18 @@ exports.requestReturn = async (req, res) => {
       });
     }
 
+    // Check for 7-day return window
+    const returnWindowDays = 7;
+    const returnWindowMs = returnWindowDays * 24 * 60 * 60 * 1000;
+    const timeSinceDelivery = Date.now() - new Date(order.deliveredAt).getTime();
+
+    if (timeSinceDelivery > returnWindowMs) {
+      return res.status(400).json({
+        success: false,
+        message: `Return window of ${returnWindowDays} days has expired`,
+      });
+    }
+
     if (order.returnRequest && order.returnRequest.status !== 'none') {
       return res.status(400).json({
         success: false,
@@ -443,6 +474,17 @@ exports.cancelOrder = async (req, res) => {
         success: false,
         message: 'Not authorized to cancel this order',
       });
+    }
+
+    // Check if any product in the order is non-cancellable
+    for (const item of order.orderItems) {
+      const product = await Product.findById(item.product);
+      if (product && !product.isCancellable) {
+        return res.status(400).json({
+          success: false,
+          message: `Order cannot be cancelled because it contains non-cancellable item: ${item.name}`,
+        });
+      }
     }
 
     // Only allow cancellation if order is pending or processing

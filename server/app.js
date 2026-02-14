@@ -13,6 +13,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const userRoutes = require('./routes/userRoutes');
+const pincodeRoutes = require('./routes/pincodeRoutes');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -110,6 +111,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/pincodes', pincodeRoutes);
 
 // 404 handler
 app.use((req, res) => {
