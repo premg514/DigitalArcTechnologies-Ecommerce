@@ -20,23 +20,10 @@ const server = http.createServer(app);
 const io = socket.init(server);
 
 // Connect to database (async)
-let dbError = null;
+global.dbError = null;
 connectDB().catch(err => {
   console.error('Failed to connect to database', err);
-  dbError = err;
-});
-
-// Debug route to see DB error
-app.get('/api/db-debug', (req, res) => {
-  if (dbError) {
-    return res.status(500).json({
-      success: false,
-      message: 'Database connection failed',
-      error: dbError.message,
-      stack: process.env.NODE_ENV === 'production' ? null : dbError.stack
-    });
-  }
-  res.json({ success: true, message: 'Database connected successfully' });
+  global.dbError = err;
 });
 
 server.listen(PORT, () => {

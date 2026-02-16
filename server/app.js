@@ -111,7 +111,26 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/pincodes', pincodeRoutes);
+
+// Debug route to see DB error
+app.get('/api/db-status', (req, res) => {
+  const mongoose = require('mongoose');
+  if (global.dbError) {
+    return res.status(500).json({
+      success: false,
+      message: 'Database connection failed',
+      error: global.dbError.message,
+      stack: process.env.NODE_ENV === 'production' ? null : global.dbError.stack
+    });
+  }
+  res.json({
+    success: true,
+    message: 'Database connected successfully',
+    readyState: mongoose.connection.readyState
+  });
+});
 
 // 404 handler
 app.use((req, res) => {
