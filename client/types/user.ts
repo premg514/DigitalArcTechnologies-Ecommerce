@@ -1,5 +1,6 @@
 export interface Address {
     _id?: string;
+    fullName?: string;
     street: string;
     city: string;
     state: string;

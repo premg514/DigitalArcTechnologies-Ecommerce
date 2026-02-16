@@ -49,7 +49,7 @@ exports.createRazorpayOrder = async (req, res) => {
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
       notes: {
-        userId: req.user._id.toString(),
+        userId: req.user ? req.user._id.toString() : 'guest',
       },
     };
 

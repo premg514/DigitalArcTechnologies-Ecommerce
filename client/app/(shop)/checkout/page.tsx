@@ -12,7 +12,9 @@ import { formatPrice } from '@/lib/utils';
 import { TAX_RATE, SHIPPING_CHARGES, RAZORPAY_KEY } from '@/lib/constants';
 import api from '@/lib/api';
 import AddressSelector from '@/components/checkout/AddressSelector';
+import GuestAddressForm from '@/components/checkout/GuestAddressForm';
 import { Address } from '@/types/user';
+import { LogIn, UserPlus, User } from 'lucide-react';
 
 declare global {
     interface Window {
@@ -28,6 +30,17 @@ export default function CheckoutPage() {
 
     const [selectedAddress, setSelectedAddress] = useState<Address | undefined>();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [checkoutMode, setCheckoutMode] = useState<'choice' | 'guest' | 'authenticated'>('authenticated');
+
+    useEffect(() => {
+        if (!isLoading) {
+            if (isAuthenticated) {
+                setCheckoutMode('authenticated');
+            } else if (checkoutMode === 'authenticated') {
+                setCheckoutMode('choice');
+            }
+        }
+    }, [isAuthenticated, isLoading]);
 
     useEffect(() => {
         if (user?.addresses && user.addresses.length > 0 && !selectedAddress) {
@@ -43,24 +56,6 @@ export default function CheckoutPage() {
             ? 0
             : SHIPPING_CHARGES.STANDARD_CHARGE;
     const total = subtotal + tax + shipping;
-
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
-
-    if (!isAuthenticated) {
-        router.push('/login?redirect=/checkout');
-        return null;
-    }
-
-    if (items.length === 0) {
-        router.push('/cart');
-        return null;
-    }
 
     const handlePayment = async () => {
         if (!selectedAddress) {
@@ -97,7 +92,7 @@ export default function CheckoutPage() {
                                 image: item.image,
                             })),
                             shippingAddress: {
-                                fullName: user?.name || 'Guest',
+                                fullName: selectedAddress.fullName || user?.name || 'Guest',
                                 phone: selectedAddress.phone,
                                 address: selectedAddress.street,
                                 city: selectedAddress.city,
@@ -127,10 +122,33 @@ export default function CheckoutPage() {
                     }
                 },
                 prefill: {
-                    name: user?.name,
+                    name: selectedAddress?.fullName || user?.name,
                     email: user?.email,
-                    contact: selectedAddress.phone,
+                    contact: selectedAddress?.phone,
                 },
+                config: {
+                    display: {
+                        blocks: {
+                            magic: {
+                                name: 'OTP Verification',
+                                instruments: [
+                                    {
+                                        method: 'card',
+                                    },
+                                    {
+                                        method: 'upi',
+                                    },
+                                ],
+                            },
+                        },
+                        sequence: ['block.magic'],
+                        preferences: {
+                            show_default_blocks: true,
+                        },
+                    },
+                },
+                magic: true, // Enable Razorpay Magic Checkout
+                shipping_address: true, // Explicitly request shipping address collection
                 theme: {
                     color: '#3B82F6',
                 },
@@ -166,6 +184,81 @@ export default function CheckoutPage() {
             setIsProcessing(false);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-[60vh]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (items.length === 0) {
+        router.push('/cart');
+        return null;
+    }
+
+    if (checkoutMode === 'guest' && !selectedAddress) {
+        return (
+            <div className="container mx-auto px-4 py-12">
+                <button
+                    onClick={() => setCheckoutMode('choice')}
+                    className="flex items-center text-sm text-zinc-500 mb-4 hover:text-zinc-800"
+                >
+                    ← Back to options
+                </button>
+                <GuestAddressForm
+                    onSubmit={(addr) => setSelectedAddress(addr)}
+                    onBack={() => setCheckoutMode('choice')}
+                />
+            </div>
+        );
+    }
+
+    if (checkoutMode === 'choice') {
+        return (
+            <div className="container mx-auto px-4 py-12 max-w-4xl">
+                <h1 className="text-3xl font-bold mb-8 text-center">Checkout Options</h1>
+                <div className="grid md:grid-cols-3 gap-6">
+                    <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/login?redirect=/checkout')}>
+                        <CardHeader className="text-center">
+                            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
+                                <LogIn className="h-6 w-6" />
+                            </div>
+                            <CardTitle>Sign In</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center text-sm text-zinc-500">
+                            Already have an account? Sign in to use your saved addresses and track orders.
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/register?redirect=/checkout')}>
+                        <CardHeader className="text-center">
+                            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
+                                <UserPlus className="h-6 w-6" />
+                            </div>
+                            <CardTitle>Register</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center text-sm text-zinc-500">
+                            New here? Create an account for a faster checkout experience next time.
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => setCheckoutMode('guest')}>
+                        <CardHeader className="text-center">
+                            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
+                                <User className="h-6 w-6" />
+                            </div>
+                            <CardTitle>Guest Checkout</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center text-sm text-zinc-500">
+                            No account? No problem. Quick checkout with mobile verification.
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto px-4 py-12">

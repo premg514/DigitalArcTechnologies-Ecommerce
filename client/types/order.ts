@@ -43,7 +43,7 @@ export interface Order {
 
 export interface CreateOrderData {
     orderItems: OrderItem[];
-    shippingAddress: ShippingAddress;
+    shippingAddress?: ShippingAddress;
     paymentMethod: string;
     itemsPrice: number;
     taxPrice: number;

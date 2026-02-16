@@ -8,7 +8,7 @@ const {
   cancelOrder,
   cancelOrderItem,
 } = require('../controllers/orderController');
-const { protect } = require('../middleware/auth');
+const { protect, optionalProtect } = require('../middleware/auth');
 const { adminOnly } = require('../middleware/adminAuth');
 const {
   validateOrder,
@@ -17,7 +17,7 @@ const {
 } = require('../middleware/validator');
 
 // Create order
-router.post('/', protect, validateOrder, createOrder);
+router.post('/', optionalProtect, validateOrder, createOrder);
 
 // Get user's orders
 router.get('/my-orders', protect, getMyOrders);

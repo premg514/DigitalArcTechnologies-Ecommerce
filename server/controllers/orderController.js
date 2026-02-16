@@ -43,8 +43,21 @@ exports.createOrder = async (req, res) => {
       }
     }
 
+    let userId = req.user?._id;
+    let currentUser = req.user;
+
+    if (!userId && shippingAddress?.phone) {
+      // Try to find a user with this phone number
+      const User = require('../models/User');
+      const userByPhone = await User.findOne({ phone: shippingAddress.phone });
+      if (userByPhone) {
+        userId = userByPhone._id;
+        currentUser = userByPhone;
+      }
+    }
+
     const orderData = {
-      user: req.user._id,
+      user: userId,
       orderItems,
       shippingAddress,
       paymentMethod,
@@ -66,13 +79,104 @@ exports.createOrder = async (req, res) => {
         .digest('hex');
 
       if (expectedSignature === razorpaySignature) {
+        // Fetch payment details to get shipping address if missing
+        let fetchedShippingAddress = shippingAddress;
+        let paymentEmail = currentUser?.email || 'Guest';
+        let paymentPhone = shippingAddress?.phone || currentUser?.phone;
+
+        try {
+          const payment = await razorpay.payments.fetch(razorpayPaymentId);
+          console.log('Razorpay Payment Details:', JSON.stringify(payment, null, 2));
+          paymentEmail = payment.email || paymentEmail;
+          paymentPhone = payment.contact || paymentPhone;
+
+          const getAddressFromObject = (obj) => {
+            if (!obj) return null;
+            // Check for direct shipping_address object
+            if (obj.shipping_address) return obj.shipping_address;
+            // Check for stringified shipping_address in notes
+            if (obj.notes?.shipping_address) {
+              try {
+                return typeof obj.notes.shipping_address === 'string'
+                  ? JSON.parse(obj.notes.shipping_address)
+                  : obj.notes.shipping_address;
+              } catch (e) {
+                console.error('Failed to parse shipping_address from notes:', e);
+              }
+            }
+            // Check for flat fields in notes
+            if (obj.notes?.address || obj.notes?.city) {
+              return {
+                name: obj.notes.name || 'Guest',
+                line1: obj.notes.address || obj.notes.line1,
+                line2: obj.notes.line2 || '',
+                city: obj.notes.city,
+                state: obj.notes.state,
+                postal_code: obj.notes.zipCode || obj.notes.pincode || obj.notes.zip,
+                country: obj.notes.country || 'India',
+                phone: obj.notes.phone || obj.contact
+              };
+            }
+            return null;
+          };
+
+          if (!fetchedShippingAddress) {
+            let rzpAddress = getAddressFromObject(payment);
+
+            // If not in payment, check the order
+            if (!rzpAddress && razorpayOrderId) {
+              try {
+                const order = await razorpay.orders.fetch(razorpayOrderId);
+                console.log('Razorpay Order Details:', JSON.stringify(order, null, 2));
+                rzpAddress = getAddressFromObject(order);
+              } catch (orderError) {
+                console.error('Error fetching Razorpay order details:', orderError);
+              }
+            }
+
+            if (rzpAddress) {
+              fetchedShippingAddress = {
+                fullName: rzpAddress.name || rzpAddress.full_name || payment.notes?.name || 'Guest',
+                address: rzpAddress.line1 || rzpAddress.address || (rzpAddress.line1 + (rzpAddress.line2 ? `, ${rzpAddress.line2}` : '')),
+                city: rzpAddress.city,
+                state: rzpAddress.state,
+                zipCode: rzpAddress.postal_code || rzpAddress.zip || rzpAddress.pincode,
+                country: rzpAddress.country || 'India',
+                phone: rzpAddress.phone || payment.contact,
+              };
+            }
+          }
+        } catch (fetchError) {
+          console.error('Error fetching Razorpay payment details:', fetchError);
+        }
+
+        if (!orderData.user && paymentPhone) {
+          try {
+            const User = require('../models/User');
+            const userByPhone = await User.findOne({ phone: paymentPhone });
+            if (userByPhone) {
+              orderData.user = userByPhone._id;
+            }
+          } catch (userError) {
+            console.error('Error finding user by phone after RMC fetch:', userError);
+          }
+        }
+
+        if (!fetchedShippingAddress) {
+          return res.status(400).json({
+            success: false,
+            message: 'Shipping address is required. Please ensure address is provided in Razorpay Magic Checkout.'
+          });
+        }
+
+        orderData.shippingAddress = fetchedShippingAddress;
         orderData.isPaid = true;
         orderData.paidAt = Date.now();
         orderData.paymentResult = {
           id: razorpayPaymentId,
           status: 'completed',
           update_time: Date.now(),
-          email_address: req.user.email,
+          email_address: paymentEmail,
           razorpayPaymentId,
           razorpayOrderId,
           razorpaySignature
@@ -94,6 +198,14 @@ exports.createOrder = async (req, res) => {
         });
       }
     } else {
+      // For non-razorpay or razorpay without result yet
+      if (!shippingAddress) {
+        return res.status(400).json({
+          success: false,
+          message: 'Shipping address is required'
+        });
+      }
+
       // Default timeline for other methods (e.g. COD if enabled later)
       orderData.timeline = [{
         status: 'Placed',
@@ -104,10 +216,12 @@ exports.createOrder = async (req, res) => {
 
     const order = await Order.create(orderData);
 
-    // Send order confirmation email (do not await to avoid delaying response)
-    sendOrderConfirmation(order, req.user).catch((err) =>
-      console.error('Order confirmation email failed:', err)
-    );
+    // Send order confirmation email if user and email exist
+    if (currentUser && currentUser.email) {
+      sendOrderConfirmation(order, currentUser).catch((err) =>
+        console.error('Order confirmation email failed:', err)
+      );
+    }
 
     // Reduce stock quantity
     for (const item of orderItems) {

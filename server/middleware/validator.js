@@ -127,26 +127,31 @@ const validateOrder = [
     .withMessage('Quantity must be at least 1'),
 
   body('shippingAddress.fullName')
+    .if(body('paymentMethod').not().equals('razorpay'))
     .trim()
     .notEmpty()
     .withMessage('Full name is required'),
 
   body('shippingAddress.address')
+    .if(body('paymentMethod').not().equals('razorpay'))
     .trim()
     .notEmpty()
     .withMessage('Address is required'),
 
   body('shippingAddress.city')
+    .if(body('paymentMethod').not().equals('razorpay'))
     .trim()
     .notEmpty()
     .withMessage('City is required'),
 
   body('shippingAddress.state')
+    .if(body('paymentMethod').not().equals('razorpay'))
     .trim()
     .notEmpty()
     .withMessage('State is required'),
 
   body('shippingAddress.zipCode')
+    .if(body('paymentMethod').not().equals('razorpay'))
     .trim()
     .notEmpty()
     .withMessage('Zip code is required')
@@ -154,6 +159,7 @@ const validateOrder = [
     .withMessage('Invalid Indian zip code'),
 
   body('shippingAddress.phone')
+    .if(body('paymentMethod').not().equals('razorpay'))
     .trim()
     .notEmpty()
     .withMessage('Phone number is required')

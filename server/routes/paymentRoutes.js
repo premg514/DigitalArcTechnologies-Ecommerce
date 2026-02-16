@@ -4,9 +4,9 @@ const {
   createRazorpayOrder,
   verifyPayment,
 } = require('../controllers/paymentController');
-const { protect } = require('../middleware/auth');
+const { protect, optionalProtect } = require('../middleware/auth');
 
-router.post('/create-order', protect, createRazorpayOrder);
-router.post('/verify', protect, verifyPayment);
+router.post('/create-order', optionalProtect, createRazorpayOrder);
+router.post('/verify', optionalProtect, verifyPayment);
 
 module.exports = router;
