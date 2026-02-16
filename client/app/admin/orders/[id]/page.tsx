@@ -284,10 +284,10 @@ export default function AdminOrderDetailsPage() {
                                 </div>
                                 <div>
                                     <p className="font-medium text-foreground">
-                                        {order.user?.name || 'Guest User'}
+                                        {order.user?.name || order.shippingAddress?.fullName || 'Guest User'}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {order.user?.email || order.shippingAddress.email}
+                                        {order.user?.email || 'No email provided'}
                                     </p>
                                 </div>
                             </div>
