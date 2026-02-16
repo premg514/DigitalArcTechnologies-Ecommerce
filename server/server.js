@@ -19,14 +19,14 @@ const server = http.createServer(app);
 // Initialize Socket.io
 const io = socket.init(server);
 
-// Connect to database and start server
-connectDB().then(() => {
-  server.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  });
-}).catch(err => {
+// Connect to database (async)
+connectDB().catch(err => {
   console.error('Failed to connect to database', err);
-  process.exit(1);
+  // Don't exit process, let requests fail gracefully with 500 error
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 
 // Handle unhandled promise rejections
