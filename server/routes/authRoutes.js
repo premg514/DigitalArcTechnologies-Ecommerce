@@ -13,6 +13,8 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, getMe);
 router.post('/logout', protect, logout);
+router.post('/forgot-password', require('../controllers/authController').forgotPassword);
+router.put('/reset-password/:resettoken', require('../controllers/authController').resetPassword);
 
 // Google OAuth routes
 router.get(

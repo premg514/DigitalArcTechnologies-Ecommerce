@@ -51,6 +51,34 @@ export const useRegister = () => {
     });
 };
 
+// Forgot Password mutation
+export const useForgotPassword = () => {
+    return useMutation({
+        mutationFn: async (email: string) => {
+            const { data } = await api.post('/auth/forgot-password', { email });
+            return data;
+        },
+    });
+};
+
+// Reset Password mutation
+export const useResetPassword = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ token, password }: { token: string; password: string }) => {
+            const { data } = await api.put(`/auth/reset-password/${token}`, { password });
+            return data;
+        },
+        onSuccess: (data) => {
+            if (data.success && data.data && data.data.token) {
+                localStorage.setItem('token', data.data.token);
+                queryClient.setQueryData(['user'], data.data);
+            }
+        },
+    });
+};
+
 // Logout mutation
 export const useLogout = () => {
     const queryClient = useQueryClient();
