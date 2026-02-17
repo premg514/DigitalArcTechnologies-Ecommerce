@@ -17,8 +17,21 @@ const pincodeRoutes = require('./routes/pincodeRoutes');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
+const connectDB = require('./config/db');
 
 const app = express();
+
+// Middleware to ensure DB connection before processing requests (Critical for Vercel)
+app.use(async (req, res, next) => {
+  if (req.originalUrl === '/api/db-status') return next(); // Skip for status check
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Database connection failed in middleware:', err);
+    res.status(500).json({ success: false, message: 'Database connection failed' });
+  }
+});
 
 // Initialize Passport
 app.use(passport.initialize());

@@ -13,8 +13,9 @@ import { TAX_RATE, SHIPPING_CHARGES, RAZORPAY_KEY } from '@/lib/constants';
 import api from '@/lib/api';
 import AddressSelector from '@/components/checkout/AddressSelector';
 import GuestAddressForm from '@/components/checkout/GuestAddressForm';
+import OrderSuccessModal from '@/components/checkout/OrderSuccessModal';
 import { Address } from '@/types/user';
-import { LogIn, UserPlus, User } from 'lucide-react';
+import { LogIn, UserPlus, User, Zap } from 'lucide-react';
 
 declare global {
     interface Window {
@@ -31,6 +32,8 @@ export default function CheckoutPage() {
     const [selectedAddress, setSelectedAddress] = useState<Address | undefined>();
     const [isProcessing, setIsProcessing] = useState(false);
     const [checkoutMode, setCheckoutMode] = useState<'choice' | 'guest' | 'authenticated'>('authenticated');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [createdOrderId, setCreatedOrderId] = useState<string | undefined>();
 
     useEffect(() => {
         if (!isLoading) {
@@ -57,16 +60,36 @@ export default function CheckoutPage() {
             : SHIPPING_CHARGES.STANDARD_CHARGE;
     const total = subtotal + tax + shipping;
 
-    const handlePayment = async () => {
-        if (!selectedAddress) {
+    const checkPincode = async (pincode: string) => {
+        try {
+            const { data } = await api.get(`/pincodes/check/${pincode}`);
+            return data.isAllowed;
+        } catch (error) {
+            console.error('Pincode check failed:', error);
+            return false; // Fail safe
+        }
+    };
+
+    const handlePayment = async (useMagicCheckout = false) => {
+        // Validation: If NOT using Magic Checkout (pure guest flow), we need a local address
+        if (!useMagicCheckout && !selectedAddress) {
             toast.error('Please select a shipping address');
             return;
+        }
+
+        // Pincode Validation: Only if we have a local address selected
+        if (!useMagicCheckout && selectedAddress) {
+            const isAllowed = await checkPincode(selectedAddress.zipCode);
+            if (!isAllowed) {
+                toast.error(`Delivery is not available to ${selectedAddress.zipCode}. Please choose a different address.`);
+                return;
+            }
         }
 
         try {
             setIsProcessing(true);
 
-            // 1. Create Razorpay order first (no DB order yet)
+            // 1. Create Razorpay order
             const { data: paymentResponse } = await api.post('/payment/create-order', {
                 items: items,
                 shippingPrice: shipping,
@@ -77,12 +100,14 @@ export default function CheckoutPage() {
                 key: RAZORPAY_KEY,
                 amount: paymentResponse.data.amount,
                 currency: 'INR',
-                name: 'Amrutha', // Using new brand name
+                name: 'Amrutha',
                 description: 'Order Payment',
-                order_id: paymentResponse.data.id, // Razorpay Order ID
+                order_id: paymentResponse.data.id,
                 handler: async function (response: any) {
                     try {
-                        // 2. Payment Successful - Now Create Order in DB
+                        let finalShippingAddress = selectedAddress;
+
+                        // 2. Payment Successful - Create Order
                         const orderData = {
                             orderItems: items.map((item) => ({
                                 product: item.productId,
@@ -91,14 +116,23 @@ export default function CheckoutPage() {
                                 price: item.price,
                                 image: item.image,
                             })),
-                            shippingAddress: {
-                                fullName: selectedAddress.fullName || user?.name || 'Guest',
-                                phone: selectedAddress.phone,
-                                address: selectedAddress.street,
-                                city: selectedAddress.city,
-                                state: selectedAddress.state,
-                                country: selectedAddress.country,
-                                zipCode: selectedAddress.zipCode,
+                            // Use selected address OR a fallback for pure Magic Checkout
+                            shippingAddress: finalShippingAddress ? {
+                                fullName: finalShippingAddress.fullName || user?.name || 'Guest',
+                                phone: finalShippingAddress.phone,
+                                address: finalShippingAddress.street,
+                                city: finalShippingAddress.city,
+                                state: finalShippingAddress.state,
+                                country: finalShippingAddress.country,
+                                zipCode: finalShippingAddress.zipCode,
+                            } : {
+                                fullName: 'Razorpay Guest',
+                                phone: '9999999999',
+                                address: 'Provided by Razorpay',
+                                city: 'Unknown',
+                                state: 'Unknown',
+                                country: 'India',
+                                zipCode: '000000'
                             },
                             paymentMethod: 'razorpay',
                             itemsPrice: subtotal,
@@ -112,13 +146,15 @@ export default function CheckoutPage() {
                             }
                         };
 
-                        await createOrder.mutateAsync(orderData);
+                        const newOrder = await createOrder.mutateAsync(orderData);
+                        setCreatedOrderId(newOrder._id);
                         clearCart();
-                        router.push('/payment/success');
+                        // SHOW SUCCESS MODAL
+                        setShowSuccessModal(true);
+
                     } catch (error: any) {
                         console.error('Order creation failed after payment:', error);
                         toast.error(`Order Creation Failed: ${error?.response?.data?.message || 'Unknown error'}. Please contact support with Payment ID: ${response.razorpay_payment_id}`);
-                        // Optionally redirect to a specific error page or keep them here
                     }
                 },
                 prefill: {
@@ -130,14 +166,10 @@ export default function CheckoutPage() {
                     display: {
                         blocks: {
                             magic: {
-                                name: 'OTP Verification',
+                                name: 'Pay via Magic',
                                 instruments: [
-                                    {
-                                        method: 'card',
-                                    },
-                                    {
-                                        method: 'upi',
-                                    },
+                                    { method: 'card' },
+                                    { method: 'upi' },
                                 ],
                             },
                         },
@@ -147,8 +179,9 @@ export default function CheckoutPage() {
                         },
                     },
                 },
-                magic: true, // Enable Razorpay Magic Checkout
-                shipping_address: true, // Explicitly request shipping address collection
+                magic: true,
+                // Only ask Razorpay to collect address if we don't have one
+                shipping_address: !selectedAddress,
                 theme: {
                     color: '#3B82F6',
                 },
@@ -158,27 +191,16 @@ export default function CheckoutPage() {
             razorpay.open();
         } catch (error: any) {
             console.error('Payment initiation failed:', error);
-
-            // Check if it's a product availability error
             if (error?.response?.data?.unavailableProducts || error?.response?.data?.outOfStockProducts) {
                 const errorData = error.response.data;
-
-                // Display detailed error message
                 if (errorData.details) {
-                    toast.error(errorData.details, {
-                        duration: 6000,
-                    });
+                    toast.error(errorData.details, { duration: 6000 });
                 } else {
                     toast.error(errorData.message || 'Some products are not available');
                 }
-
-                // Redirect to cart to review items
-                setTimeout(() => {
-                    router.push('/cart');
-                }, 3000);
+                setTimeout(() => { router.push('/cart'); }, 3000);
             } else {
-                const errorMessage = error.response?.data?.message || 'Failed to initiate payment. Please try again.';
-                toast.error(errorMessage);
+                toast.error(error.response?.data?.message || 'Failed to initiate payment.');
             }
         } finally {
             setIsProcessing(false);
@@ -193,159 +215,197 @@ export default function CheckoutPage() {
         );
     }
 
-    if (items.length === 0) {
+    if (items.length === 0 && !showSuccessModal) {
         router.push('/cart');
         return null;
     }
 
-    if (checkoutMode === 'guest' && !selectedAddress) {
-        return (
-            <div className="container mx-auto px-4 py-12">
-                <button
-                    onClick={() => setCheckoutMode('choice')}
-                    className="flex items-center text-sm text-zinc-500 mb-4 hover:text-zinc-800"
-                >
-                    ← Back to options
-                </button>
-                <GuestAddressForm
-                    onSubmit={(addr) => setSelectedAddress(addr)}
-                    onBack={() => setCheckoutMode('choice')}
-                />
-            </div>
-        );
-    }
-
-    if (checkoutMode === 'choice') {
-        return (
-            <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <h1 className="text-3xl font-bold mb-8 text-center">Checkout Options</h1>
-                <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/login?redirect=/checkout')}>
-                        <CardHeader className="text-center">
-                            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
-                                <LogIn className="h-6 w-6" />
-                            </div>
-                            <CardTitle>Sign In</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center text-sm text-zinc-500">
-                            Already have an account? Sign in to use your saved addresses and track orders.
-                        </CardContent>
-                    </Card>
-
-                    <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/register?redirect=/checkout')}>
-                        <CardHeader className="text-center">
-                            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
-                                <UserPlus className="h-6 w-6" />
-                            </div>
-                            <CardTitle>Register</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center text-sm text-zinc-500">
-                            New here? Create an account for a faster checkout experience next time.
-                        </CardContent>
-                    </Card>
-
-                    <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => setCheckoutMode('guest')}>
-                        <CardHeader className="text-center">
-                            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
-                                <User className="h-6 w-6" />
-                            </div>
-                            <CardTitle>Guest Checkout</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center text-sm text-zinc-500">
-                            No account? No problem. Quick checkout with mobile verification.
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="container mx-auto px-4 py-12">
-            <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+            <OrderSuccessModal isOpen={showSuccessModal} orderId={createdOrderId} />
 
-            <div className="grid lg:grid-cols-3 gap-8">
-                {/* Shipping Form */}
-                <div className="lg:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Shipping Address</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <AddressSelector
-                                addresses={user?.addresses || []}
-                                selectedAddress={selectedAddress}
-                                onSelect={setSelectedAddress}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    {/* Order Items */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Order Items</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            {items.map((item) => (
-                                <div key={item.productId} className="flex justify-between text-sm">
-                                    <span>
-                                        {item.name} × {item.quantity}
-                                    </span>
-                                    <span className="font-medium">
-                                        {formatPrice(item.price * item.quantity)}
-                                    </span>
+            {checkoutMode === 'choice' ? (
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-8 text-center">Checkout Options</h1>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/login?redirect=/checkout')}>
+                            <CardHeader className="text-center">
+                                <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
+                                    <LogIn className="h-6 w-6" />
                                 </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                                <CardTitle>Sign In</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-center text-sm text-zinc-500">
+                                Sign in to use saved addresses and track orders.
+                            </CardContent>
+                        </Card>
+
+                        <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/register?redirect=/checkout')}>
+                            <CardHeader className="text-center">
+                                <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
+                                    <UserPlus className="h-6 w-6" />
+                                </div>
+                                <CardTitle>Register</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-center text-sm text-zinc-500">
+                                Create an account for faster checkout.
+                            </CardContent>
+                        </Card>
+
+                        <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => setCheckoutMode('guest')}>
+                            <CardHeader className="text-center">
+                                <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
+                                    <User className="h-6 w-6" />
+                                </div>
+                                <CardTitle>Guest Checkout</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-center text-sm text-zinc-500">
+                                Enter details manually for this order.
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="mt-8 text-center">
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">Or pay instantly</span>
+                            </div>
+                        </div>
+
+                        <Button
+                            onClick={() => handlePayment(true)}
+                            size="lg"
+                            className="mt-6 w-full max-w-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
+                        >
+                            <Zap className="w-4 h-4 mr-2 fill-current" />
+                            Magic Checkout (Fast)
+                        </Button>
+                        <p className="text-xs text-zinc-500 mt-2">Use your saved numbers/cards via Razorpay</p>
+                    </div>
                 </div>
-
-                {/* Order Summary */}
-                <div className="lg:col-span-1">
-                    <Card className="sticky top-20">
-                        <CardHeader>
-                            <CardTitle>Order Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-zinc-600 dark:text-zinc-400">Subtotal</span>
-                                <span className="font-medium">{formatPrice(subtotal)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-zinc-600 dark:text-zinc-400">
-                                    Tax (GST {TAX_RATE * 100}%)
-                                </span>
-                                <span className="font-medium">{formatPrice(tax)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-zinc-600 dark:text-zinc-400">Shipping</span>
-                                <span className="font-medium">
-                                    {shipping === 0 ? 'FREE' : formatPrice(shipping)}
-                                </span>
-                            </div>
-                            <div className="border-t pt-4">
-                                <div className="flex justify-between">
-                                    <span className="text-lg font-semibold">Total</span>
-                                    <span className="text-2xl font-bold">{formatPrice(total)}</span>
-                                </div>
-                            </div>
-                            <Button
-                                onClick={handlePayment}
-                                disabled={isProcessing || !selectedAddress}
-                                size="lg"
-                                className="w-full"
+            ) : (
+                <>
+                    {checkoutMode === 'guest' && !selectedAddress && (
+                        <div className="mb-8">
+                            <button
+                                onClick={() => setCheckoutMode('choice')}
+                                className="text-sm text-zinc-500 hover:text-zinc-800 mb-4"
                             >
-                                {isProcessing ? 'Processing...' : 'Pay Now'}
-                            </Button>
-                            <p className="text-xs text-center text-zinc-500">
-                                Secure payment powered by Razorpay
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                                ← Back to options
+                            </button>
+                            {/* Magic Checkout Banner for Guest */}
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 mb-6 flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">Want faster checkout?</h3>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">Skip the forms and pay instantly with Razorpay Magic.</p>
+                                </div>
+                                <Button
+                                    onClick={() => handlePayment(true)}
+                                    size="sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                    <Zap className="w-3 h-3 mr-1 fill-current" /> Magic Pay
+                                </Button>
+                            </div>
+                            <GuestAddressForm
+                                onSubmit={(addr) => setSelectedAddress(addr)}
+                                onBack={() => setCheckoutMode('choice')}
+                            />
+                        </div>
+                    )}
 
-            {/* Load Razorpay Script */}
+                    {/* Main Checkout UI (Address Selected or Authenticated) */}
+                    {(checkoutMode === 'authenticated' || (checkoutMode === 'guest' && selectedAddress)) && (
+                        <div className="grid lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 space-y-6">
+                                <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Shipping Address</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <AddressSelector
+                                            addresses={user?.addresses || []}
+                                            selectedAddress={selectedAddress}
+                                            onSelect={setSelectedAddress}
+                                        />
+                                        {checkoutMode === 'guest' && (
+                                            <Button variant="outline" size="sm" onClick={() => setSelectedAddress(undefined)} className="mt-4">
+                                                Change Address
+                                            </Button>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Order Items</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-2">
+                                        {items.map((item) => (
+                                            <div key={item.productId} className="flex justify-between text-sm">
+                                                <span>
+                                                    {item.name} × {item.quantity}
+                                                </span>
+                                                <span className="font-medium">
+                                                    {formatPrice(item.price * item.quantity)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            <div className="lg:col-span-1">
+                                <Card className="sticky top-20">
+                                    <CardHeader>
+                                        <CardTitle>Order Summary</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-zinc-600 dark:text-zinc-400">Subtotal</span>
+                                            <span className="font-medium">{formatPrice(subtotal)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-zinc-600 dark:text-zinc-400">
+                                                Tax (GST {TAX_RATE * 100}%)
+                                            </span>
+                                            <span className="font-medium">{formatPrice(tax)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-zinc-600 dark:text-zinc-400">Shipping</span>
+                                            <span className="font-medium">
+                                                {shipping === 0 ? 'FREE' : formatPrice(shipping)}
+                                            </span>
+                                        </div>
+                                        <div className="border-t pt-4">
+                                            <div className="flex justify-between">
+                                                <span className="text-lg font-semibold">Total</span>
+                                                <span className="text-2xl font-bold">{formatPrice(total)}</span>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            onClick={() => handlePayment(false)}
+                                            disabled={isProcessing || !selectedAddress}
+                                            size="lg"
+                                            className="w-full"
+                                        >
+                                            {isProcessing ? 'Processing...' : 'Pay Now'}
+                                        </Button>
+                                        <p className="text-xs text-center text-zinc-500">
+                                            Secure payment powered by Razorpay
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
+
             <script src="https://checkout.razorpay.com/v1/checkout.js" async />
         </div>
     );

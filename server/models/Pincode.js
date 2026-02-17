@@ -31,6 +31,7 @@ const pincodeSchema = new mongoose.Schema(
 );
 
 // Index for faster searching
-pincodeSchema.index({ pincode: 1 });
+// Index for faster searching - Removed duplicate
+// pincodeSchema.index({ pincode: 1 });
 
 module.exports = mongoose.model('Pincode', pincodeSchema);
