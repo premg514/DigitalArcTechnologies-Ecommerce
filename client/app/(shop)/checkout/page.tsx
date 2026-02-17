@@ -106,16 +106,26 @@ export default function CheckoutPage() {
                 order_id: paymentResponse.data.id,
                 handler: async function (response: any) {
                     try {
+                        // DEBUG: Log the entire Razorpay response
+                        console.log("=== RAZORPAY RESPONSE ===");
+                        console.log("Full response object:", response);
+                        console.log("Response keys:", Object.keys(response));
+                        console.log("razorpay_shipping_address:", response.razorpay_shipping_address);
+                        console.log("========================");
+
                         let finalShippingAddress = selectedAddress;
                         let razorpayAddress = null;
 
-                        // Try to extract address from Razorpay response (for Magic/Guest)
+                        // Try to extract address from Razorpay response (for Guest)
                         if (!finalShippingAddress && response.razorpay_shipping_address) {
                             try {
+                                console.log("Attempting to parse shipping address...");
                                 // Razorpay returns address as a JSON string
                                 const parsedAddr = typeof response.razorpay_shipping_address === 'string'
                                     ? JSON.parse(response.razorpay_shipping_address)
                                     : response.razorpay_shipping_address;
+
+                                console.log("Parsed address:", parsedAddr);
 
                                 razorpayAddress = {
                                     fullName: parsedAddr.name || 'Guest',
@@ -126,9 +136,13 @@ export default function CheckoutPage() {
                                     country: parsedAddr.country || 'India',
                                     zipCode: parsedAddr.zipcode || parsedAddr.pincode || '000000',
                                 };
+                                console.log("Extracted Razorpay address:", razorpayAddress);
                             } catch (err) {
                                 console.error("Failed to parse Razorpay address:", err);
                             }
+                        } else {
+                            console.log("No shipping address in response or address already selected");
+                            console.log("selectedAddress:", selectedAddress);
                         }
 
                         // 2. Payment Successful - Create Order
