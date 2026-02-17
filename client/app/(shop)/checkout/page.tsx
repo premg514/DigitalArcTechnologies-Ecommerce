@@ -106,43 +106,31 @@ export default function CheckoutPage() {
                 order_id: paymentResponse.data.id,
                 handler: async function (response: any) {
                     try {
-                        // DEBUG: Log the entire Razorpay response
-                        console.log("=== RAZORPAY RESPONSE ===");
-                        console.log("Full response object:", response);
-                        console.log("Response keys:", Object.keys(response));
-                        console.log("razorpay_shipping_address:", response.razorpay_shipping_address);
-                        console.log("========================");
+                        console.log("=== RAZORPAY PAYMENT RESPONSE ===");
+                        console.log("Payment ID:", response.razorpay_payment_id);
+                        console.log("Order ID:", response.razorpay_order_id);
+                        console.log("=================================");
 
                         let finalShippingAddress = selectedAddress;
                         let razorpayAddress = null;
 
-                        // Try to extract address from Razorpay response (for Guest)
-                        if (!finalShippingAddress && response.razorpay_shipping_address) {
+                        // If no address selected (guest checkout), fetch from Razorpay order details
+                        if (!finalShippingAddress) {
                             try {
-                                console.log("Attempting to parse shipping address...");
-                                // Razorpay returns address as a JSON string
-                                const parsedAddr = typeof response.razorpay_shipping_address === 'string'
-                                    ? JSON.parse(response.razorpay_shipping_address)
-                                    : response.razorpay_shipping_address;
+                                console.log("Fetching shipping address from Razorpay order...");
+                                const { data: orderDetails } = await api.get(`/payment/order/${response.razorpay_order_id}`);
 
-                                console.log("Parsed address:", parsedAddr);
+                                console.log("Razorpay Order Details Response:", orderDetails);
 
-                                razorpayAddress = {
-                                    fullName: parsedAddr.name || 'Guest',
-                                    phone: parsedAddr.contact || parsedAddr.phone || '9999999999',
-                                    street: [parsedAddr.line1, parsedAddr.line2].filter(Boolean).join(', '),
-                                    city: parsedAddr.city || 'Unknown',
-                                    state: parsedAddr.state || 'Unknown',
-                                    country: parsedAddr.country || 'India',
-                                    zipCode: parsedAddr.zipcode || parsedAddr.pincode || '000000',
-                                };
-                                console.log("Extracted Razorpay address:", razorpayAddress);
+                                if (orderDetails.success && orderDetails.data.shippingAddress) {
+                                    razorpayAddress = orderDetails.data.shippingAddress;
+                                    console.log("Successfully extracted address:", razorpayAddress);
+                                } else {
+                                    console.warn("No shipping address found in Razorpay order");
+                                }
                             } catch (err) {
-                                console.error("Failed to parse Razorpay address:", err);
+                                console.error("Failed to fetch Razorpay order details:", err);
                             }
-                        } else {
-                            console.log("No shipping address in response or address already selected");
-                            console.log("selectedAddress:", selectedAddress);
                         }
 
                         // 2. Payment Successful - Create Order

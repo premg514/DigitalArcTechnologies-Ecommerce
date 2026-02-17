@@ -182,3 +182,79 @@ exports.verifyPayment = async (req, res) => {
     });
   }
 };
+
+// @desc    Fetch Razorpay order details (including shipping address)
+// @route   GET /api/payment/order/:razorpayOrderId
+// @access  Public (called after payment)
+exports.getRazorpayOrderDetails = async (req, res) => {
+  try {
+    const { razorpayOrderId } = req.params;
+
+    if (!razorpayOrderId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Razorpay order ID is required'
+      });
+    }
+
+    // Fetch order details from Razorpay
+    const razorpayOrder = await razorpay.orders.fetch(razorpayOrderId);
+
+    console.log('Razorpay Order Details:', JSON.stringify(razorpayOrder, null, 2));
+
+    // Extract shipping address from notes or customer_details
+    let shippingAddress = null;
+
+    // Check if address is in notes
+    if (razorpayOrder.notes && razorpayOrder.notes.address) {
+      try {
+        shippingAddress = typeof razorpayOrder.notes.address === 'string'
+          ? JSON.parse(razorpayOrder.notes.address)
+          : razorpayOrder.notes.address;
+      } catch (e) {
+        console.error('Failed to parse address from notes:', e);
+      }
+    }
+
+    // Check customer_details (Razorpay stores shipping info here when collected via checkout)
+    if (!shippingAddress && razorpayOrder.customer_details) {
+      const customerDetails = razorpayOrder.customer_details;
+
+      // Razorpay stores billing/shipping address in customer_details
+      if (customerDetails.shipping_address || customerDetails.billing_address) {
+        const addr = customerDetails.shipping_address || customerDetails.billing_address;
+        shippingAddress = {
+          fullName: customerDetails.name || 'Guest',
+          phone: customerDetails.contact || customerDetails.phone || '9999999999',
+          street: [addr.line1, addr.line2].filter(Boolean).join(', ') || addr.address || 'Address not provided',
+          city: addr.city || 'Unknown',
+          state: addr.state || 'Unknown',
+          country: addr.country || 'India',
+          zipCode: addr.zipcode || addr.postal_code || addr.pincode || '000000',
+        };
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        orderId: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        status: razorpayOrder.status,
+        shippingAddress,
+        customerDetails: razorpayOrder.customer_details,
+        notes: razorpayOrder.notes
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching Razorpay order:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch order details',
+      error: error.message
+    });
+  }
+};
+
