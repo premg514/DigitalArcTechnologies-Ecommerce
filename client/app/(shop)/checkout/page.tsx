@@ -196,7 +196,7 @@ export default function CheckoutPage() {
                 },
                 // Removed strict config to allow Magic to handle address/payment sequence naturally
                 config: undefined,
-                magic: useMagicCheckout,
+                magic: false,
                 // Only ask Razorpay to collect address if we don't have one
                 shipping_address: !selectedAddress,
                 theme: {
