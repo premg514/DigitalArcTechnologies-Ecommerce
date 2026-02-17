@@ -78,6 +78,14 @@ export default function OrderSuccessModal({ isOpen, orderId, isGuest }: OrderSuc
                                 View Order Details
                             </Button>
                         )}
+                        {isGuest && orderId && (
+                            <Button
+                                className="w-full bg-green-600 hover:bg-green-700 text-white shadow-lg h-11 text-base"
+                                onClick={() => window.open(`/api/orders/${orderId}/receipt`, '_blank')}
+                            >
+                                Download Receipt
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             className="w-full text-zinc-500 hover:text-zinc-900"

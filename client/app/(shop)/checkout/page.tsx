@@ -196,11 +196,10 @@ export default function CheckoutPage() {
                     email: user?.email,
                     contact: selectedAddress?.phone,
                 },
-                // Removed strict config to allow Magic to handle address/payment sequence naturally
-                config: undefined,
-                magic: false,
-                // We collect address manually before payment, so don't ask Razorpay to collect it
-                shipping_address: false,
+                // Enable Magic Checkout for guest users
+                magic: useMagicCheckout,
+                // Ask Razorpay to collect shipping address for guests
+                shipping_address: useMagicCheckout,
                 theme: {
                     color: '#3B82F6',
                 },
@@ -246,7 +245,7 @@ export default function CheckoutPage() {
             {checkoutMode === 'choice' ? (
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-3xl font-bold mb-8 text-center">Checkout Options</h1>
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                         <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/login?redirect=/checkout')}>
                             <CardHeader className="text-center">
                                 <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
@@ -256,18 +255,6 @@ export default function CheckoutPage() {
                             </CardHeader>
                             <CardContent className="text-center text-sm text-zinc-500">
                                 Sign in to use saved addresses and track orders.
-                            </CardContent>
-                        </Card>
-
-                        <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => router.push('/register?redirect=/checkout')}>
-                            <CardHeader className="text-center">
-                                <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
-                                    <UserPlus className="h-6 w-6" />
-                                </div>
-                                <CardTitle>Register</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-center text-sm text-zinc-500">
-                                Create an account for faster checkout.
                             </CardContent>
                         </Card>
 
@@ -289,7 +276,7 @@ export default function CheckoutPage() {
             ) : (
                 <>
                     {checkoutMode === 'guest' && !selectedAddress && (
-                        <div className="mb-8 max-w-2xl mx-auto">
+                        <div className="mb-8 max-w-lg mx-auto">
                             <button
                                 onClick={() => setCheckoutMode('choice')}
                                 className="text-sm text-zinc-500 hover:text-zinc-800 mb-4"
@@ -297,15 +284,44 @@ export default function CheckoutPage() {
                                 ← Back to options
                             </button>
 
-                            <h2 className="text-2xl font-bold mb-6">Shipping Address</h2>
-                            <p className="text-muted-foreground mb-6">
-                                Please enter your shipping address to continue with payment.
-                            </p>
+                            <div className="space-y-6 text-center py-8">
+                                <h3 className="text-2xl font-bold">Guest Checkout</h3>
+                                <p className="text-muted-foreground mb-6">
+                                    Click below to proceed. You'll enter your shipping address and payment details securely via Razorpay Magic Checkout.
+                                </p>
 
-                            <GuestAddressForm
-                                onSubmit={(addr) => setSelectedAddress(addr)}
-                                onBack={() => setCheckoutMode('choice')}
-                            />
+                                {/* Warning for guests */}
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left mb-6">
+                                    <div className="flex items-start gap-3">
+                                        <div className="text-amber-600 mt-0.5">
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-amber-900 text-sm">Guest Order Limitation</p>
+                                            <p className="text-amber-800 text-xs mt-1">
+                                                You won't be able to track this order after checkout. Create an account to track orders and view order history.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    onClick={() => handlePayment(true)}
+                                    size="lg"
+                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg h-auto py-4"
+                                    disabled={isProcessing}
+                                >
+                                    <div className="flex flex-col items-center">
+                                        <div className="flex items-center text-lg mb-1">
+                                            <Zap className="w-5 h-5 mr-2 fill-current" />
+                                            {isProcessing ? 'Processing...' : 'Proceed with Magic Checkout'}
+                                        </div>
+                                        <span className="text-xs opacity-90 font-normal">Secure address & payment via Razorpay</span>
+                                    </div>
+                                </Button>
+                            </div>
                         </div>
                     )}
 
@@ -314,23 +330,21 @@ export default function CheckoutPage() {
                         <div className="grid lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-6">
                                 <h1 className="text-3xl font-bold mb-8">Checkout</h1>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Shipping Address</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <AddressSelector
-                                            addresses={user?.addresses || []}
-                                            selectedAddress={selectedAddress}
-                                            onSelect={setSelectedAddress}
-                                        />
-                                        {checkoutMode === 'guest' && (
-                                            <Button variant="outline" size="sm" onClick={() => setSelectedAddress(undefined)} className="mt-4">
-                                                Change Address
-                                            </Button>
-                                        )}
-                                    </CardContent>
-                                </Card>
+                                {/* Only show address selector for authenticated users */}
+                                {checkoutMode === 'authenticated' && (
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Shipping Address</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <AddressSelector
+                                                addresses={user?.addresses || []}
+                                                selectedAddress={selectedAddress}
+                                                onSelect={setSelectedAddress}
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                )}
 
                                 <Card>
                                     <CardHeader>
