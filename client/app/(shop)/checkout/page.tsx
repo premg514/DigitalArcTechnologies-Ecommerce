@@ -106,6 +106,29 @@ export default function CheckoutPage() {
                 handler: async function (response: any) {
                     try {
                         let finalShippingAddress = selectedAddress;
+                        let razorpayAddress = null;
+
+                        // Try to extract address from Razorpay response (for Magic/Guest)
+                        if (!finalShippingAddress && response.razorpay_shipping_address) {
+                            try {
+                                // Razorpay returns address as a JSON string
+                                const parsedAddr = typeof response.razorpay_shipping_address === 'string'
+                                    ? JSON.parse(response.razorpay_shipping_address)
+                                    : response.razorpay_shipping_address;
+
+                                razorpayAddress = {
+                                    fullName: parsedAddr.name || 'Guest',
+                                    phone: parsedAddr.contact || parsedAddr.phone || '9999999999',
+                                    street: [parsedAddr.line1, parsedAddr.line2].filter(Boolean).join(', '),
+                                    city: parsedAddr.city || 'Unknown',
+                                    state: parsedAddr.state || 'Unknown',
+                                    country: parsedAddr.country || 'India',
+                                    zipCode: parsedAddr.zipcode || parsedAddr.pincode || '000000',
+                                };
+                            } catch (err) {
+                                console.error("Failed to parse Razorpay address:", err);
+                            }
+                        }
 
                         // 2. Payment Successful - Create Order
                         const orderData = {
@@ -116,7 +139,7 @@ export default function CheckoutPage() {
                                 price: item.price,
                                 image: item.image,
                             })),
-                            // Use selected address OR a fallback for pure Magic Checkout
+                            // Use selected address, OR extracted Razorpay address, OR fallback
                             shippingAddress: finalShippingAddress ? {
                                 fullName: finalShippingAddress.fullName || user?.name || 'Guest',
                                 phone: finalShippingAddress.phone,
@@ -125,15 +148,23 @@ export default function CheckoutPage() {
                                 state: finalShippingAddress.state,
                                 country: finalShippingAddress.country,
                                 zipCode: finalShippingAddress.zipCode,
+                            } : (razorpayAddress ? {
+                                fullName: razorpayAddress.fullName,
+                                phone: razorpayAddress.phone,
+                                address: razorpayAddress.street,
+                                city: razorpayAddress.city,
+                                state: razorpayAddress.state,
+                                country: razorpayAddress.country,
+                                zipCode: razorpayAddress.zipCode,
                             } : {
                                 fullName: 'Razorpay Guest',
                                 phone: '9999999999',
-                                address: 'Provided by Razorpay',
+                                address: 'Address not provided by Razorpay',
                                 city: 'Unknown',
                                 state: 'Unknown',
                                 country: 'India',
                                 zipCode: '000000'
-                            },
+                            }),
                             paymentMethod: 'razorpay',
                             itemsPrice: subtotal,
                             taxPrice: tax,
@@ -162,23 +193,8 @@ export default function CheckoutPage() {
                     email: user?.email,
                     contact: selectedAddress?.phone,
                 },
-                config: {
-                    display: {
-                        blocks: {
-                            magic: {
-                                name: 'Pay via Magic',
-                                instruments: [
-                                    { method: 'card' },
-                                    { method: 'upi' },
-                                ],
-                            },
-                        },
-                        sequence: ['block.magic'],
-                        preferences: {
-                            show_default_blocks: true,
-                        },
-                    },
-                },
+                // Removed strict config to allow Magic to handle address/payment sequence naturally
+                config: undefined,
                 magic: true,
                 // Only ask Razorpay to collect address if we don't have one
                 shipping_address: !selectedAddress,
