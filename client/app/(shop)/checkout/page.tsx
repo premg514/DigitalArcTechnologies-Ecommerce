@@ -35,6 +35,7 @@ export default function CheckoutPage() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [createdOrderId, setCreatedOrderId] = useState<string | undefined>();
 
+
     useEffect(() => {
         if (!isLoading) {
             if (isAuthenticated) {
@@ -281,57 +282,39 @@ export default function CheckoutPage() {
                         </Card>
                     </div>
 
-                    <div className="mt-8 text-center">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">Or pay instantly</span>
-                            </div>
-                        </div>
 
-                        <Button
-                            onClick={() => handlePayment(true)}
-                            size="lg"
-                            className="mt-6 w-full max-w-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
-                        >
-                            <Zap className="w-4 h-4 mr-2 fill-current" />
-                            Magic Checkout (Fast)
-                        </Button>
-                        <p className="text-xs text-zinc-500 mt-2">Use your saved numbers/cards via Razorpay</p>
-                    </div>
                 </div>
             ) : (
                 <>
-                    {checkoutMode === 'guest' && !selectedAddress && (
-                        <div className="mb-8">
-                            <button
-                                onClick={() => setCheckoutMode('choice')}
-                                className="text-sm text-zinc-500 hover:text-zinc-800 mb-4"
+                    <div className="mb-8">
+                        <button
+                            onClick={() => setCheckoutMode('choice')}
+                            className="text-sm text-zinc-500 hover:text-zinc-800 mb-4"
+                        >
+                            ← Back to options
+                        </button>
+
+                        <div className="space-y-6 max-w-lg mx-auto text-center py-8">
+                            <h3 className="text-xl font-semibold">Guest Checkout</h3>
+                            <p className="text-muted-foreground mb-6">
+                                You will be asked to enter your shipping details securely during payment.
+                            </p>
+
+                            <Button
+                                onClick={() => handlePayment(true)}
+                                size="lg"
+                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md h-auto py-4"
                             >
-                                ← Back to options
-                            </button>
-                            {/* Magic Checkout Banner for Guest */}
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 mb-6 flex items-center justify-between">
-                                <div>
-                                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">Want faster checkout?</h3>
-                                    <p className="text-sm text-blue-700 dark:text-blue-300">Skip the forms and pay instantly with Razorpay Magic.</p>
+                                <div className="flex flex-col items-center">
+                                    <div className="flex items-center text-lg mb-1">
+                                        <Zap className="w-5 h-5 mr-2 fill-current" />
+                                        Proceed to Secure Checkout
+                                    </div>
+                                    <span className="text-xs opacity-90 font-normal">Enter address & pay via Razorpay</span>
                                 </div>
-                                <Button
-                                    onClick={() => handlePayment(true)}
-                                    size="sm"
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                >
-                                    <Zap className="w-3 h-3 mr-1 fill-current" /> Magic Pay
-                                </Button>
-                            </div>
-                            <GuestAddressForm
-                                onSubmit={(addr) => setSelectedAddress(addr)}
-                                onBack={() => setCheckoutMode('choice')}
-                            />
+                            </Button>
                         </div>
-                    )}
+                    </div>
 
                     {/* Main Checkout UI (Address Selected or Authenticated) */}
                     {(checkoutMode === 'authenticated' || (checkoutMode === 'guest' && selectedAddress)) && (
