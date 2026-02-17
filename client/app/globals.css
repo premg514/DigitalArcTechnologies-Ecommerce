@@ -97,6 +97,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Global interactivity styles */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
 h1,
 h2,
 h3,

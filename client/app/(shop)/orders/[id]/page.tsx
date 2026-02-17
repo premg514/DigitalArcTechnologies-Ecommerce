@@ -259,11 +259,7 @@ export default function OrderDetailsPage() {
                                                                     <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
                                                                 ) : 'Cancel Item'}
                                                             </Button>
-                                                        ) : (
-                                                            <span className="text-[10px] font-black text-white uppercase tracking-tighter bg-primary px-2.5 py-1 rounded shadow-sm">
-                                                                Non-Cancellable
-                                                            </span>
-                                                        )}
+                                                        ) : null}
                                                     </div>
                                                 )}
                                                 {item.isCancelled && item.cancelledAt && (
