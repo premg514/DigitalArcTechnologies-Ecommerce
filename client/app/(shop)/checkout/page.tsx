@@ -239,7 +239,7 @@ export default function CheckoutPage() {
 
     return (
         <div className="container mx-auto px-4 py-12">
-            <OrderSuccessModal isOpen={showSuccessModal} orderId={createdOrderId} />
+            <OrderSuccessModal isOpen={showSuccessModal} orderId={createdOrderId} isGuest={!isAuthenticated} />
 
             {checkoutMode === 'choice' ? (
                 <div className="max-w-4xl mx-auto">
