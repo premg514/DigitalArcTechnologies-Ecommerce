@@ -366,24 +366,26 @@ export default function CheckoutPage() {
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="flex justify-between text-sm">
-                                            <span className="text-zinc-600 dark:text-zinc-400">Subtotal</span>
+                                            <span className="text-zinc-600 dark:text-zinc-400">Products Total</span>
                                             <span className="font-medium">{formatPrice(subtotal)}</span>
                                         </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-zinc-600 dark:text-zinc-400">
-                                                Tax (GST {TAX_RATE * 100}%)
-                                            </span>
-                                            <span className="font-medium">{formatPrice(tax)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-zinc-600 dark:text-zinc-400">Shipping</span>
-                                            <span className="font-medium">
-                                                {shipping === 0 ? 'FREE' : formatPrice(shipping)}
-                                            </span>
-                                        </div>
+                                        {/* Hiding Tax and Shipping as per user request to only show product price
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-zinc-600 dark:text-zinc-400">
+                                            Tax (GST {TAX_RATE * 100}%)
+                                        </span>
+                                        <span className="font-medium">{formatPrice(tax)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-zinc-600 dark:text-zinc-400">Shipping</span>
+                                        <span className="font-medium">
+                                            {shipping === 0 ? 'FREE' : formatPrice(shipping)}
+                                        </span>
+                                    </div>
+                                    */}
                                         <div className="border-t pt-4">
                                             <div className="flex justify-between">
-                                                <span className="text-lg font-semibold">Total</span>
+                                                <span className="text-lg font-semibold">Total Amount</span>
                                                 <span className="text-2xl font-bold">{formatPrice(total)}</span>
                                             </div>
                                         </div>

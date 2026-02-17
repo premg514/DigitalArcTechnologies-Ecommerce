@@ -37,7 +37,7 @@ export const TAX_RATE = 0.18; // 18% GST
 
 export const SHIPPING_CHARGES = {
     FREE_SHIPPING_THRESHOLD: 500,
-    STANDARD_CHARGE: 50,
+    STANDARD_CHARGE: 0,
 } as const;
 
 export const API_ENDPOINTS = {
