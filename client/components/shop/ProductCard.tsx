@@ -162,7 +162,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         <button
                             onClick={decrementQty}
                             disabled={quantity <= 1 || product.stock === 0}
-                            className="px-4 py-2 text-text-muted hover:bg-bg-warm transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="px-4 py-2 text-text-muted hover:bg-zinc-100 cursor-pointer transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                         >
                             <Minus className="h-4 w-4" />
                         </button>
@@ -172,7 +172,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         <button
                             onClick={incrementQty}
                             disabled={quantity >= product.stock || product.stock === 0}
-                            className="px-4 py-2 text-text-muted hover:bg-bg-warm transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="px-4 py-2 text-text-muted hover:bg-zinc-100 cursor-pointer transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                         >
                             <Plus className="h-4 w-4" />
                         </button>
@@ -184,7 +184,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <Button
                     onClick={handleAddToCart}
                     disabled={product.stock === 0}
-                    className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold text-sm uppercase tracking-widest py-6 rounded-md transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:transform-none"
+                    className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold text-sm uppercase tracking-widest py-6 rounded-md transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:transform-none cursor-pointer shadow-md hover:shadow-lg"
                 >
                     Add to Cart
                 </Button>

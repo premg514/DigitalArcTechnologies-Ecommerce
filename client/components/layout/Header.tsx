@@ -93,7 +93,7 @@ export default function Header() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="hidden sm:flex text-sage-soft hover:text-secondary hover:bg-cream-beige"
+                            className="hidden sm:flex text-sage-soft hover:text-secondary hover:bg-cream-beige hover:scale-105 transition-all duration-200 cursor-pointer"
                         >
                             <Search className="h-5 w-5" />
                         </Button>
@@ -103,11 +103,11 @@ export default function Header() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="relative text-sage-soft hover:text-secondary hover:bg-cream-beige"
+                                className="relative text-sage-soft hover:text-secondary hover:bg-cream-beige hover:scale-105 transition-all duration-200 cursor-pointer"
                             >
                                 <ShoppingCart className="h-5 w-5" />
                                 {cartItemsCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-secondary text-xs text-white flex items-center justify-center font-medium">
+                                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-secondary text-xs text-white flex items-center justify-center font-medium shadow-sm">
                                         {cartItemsCount}
                                     </span>
                                 )}
@@ -120,7 +120,7 @@ export default function Header() {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="text-sage-soft hover:text-secondary hover:bg-cream-beige"
+                                    className="text-sage-soft hover:text-secondary hover:bg-cream-beige hover:scale-105 transition-all duration-200 cursor-pointer"
                                 >
                                     <User className="h-5 w-5" />
                                 </Button>
