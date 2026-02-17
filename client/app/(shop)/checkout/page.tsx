@@ -199,8 +199,8 @@ export default function CheckoutPage() {
                 // Removed strict config to allow Magic to handle address/payment sequence naturally
                 config: undefined,
                 magic: false,
-                // Only ask Razorpay to collect address if we don't have one
-                shipping_address: !selectedAddress,
+                // We collect address manually before payment, so don't ask Razorpay to collect it
+                shipping_address: false,
                 theme: {
                     color: '#3B82F6',
                 },
@@ -289,7 +289,7 @@ export default function CheckoutPage() {
             ) : (
                 <>
                     {checkoutMode === 'guest' && !selectedAddress && (
-                        <div className="mb-8">
+                        <div className="mb-8 max-w-2xl mx-auto">
                             <button
                                 onClick={() => setCheckoutMode('choice')}
                                 className="text-sm text-zinc-500 hover:text-zinc-800 mb-4"
@@ -297,26 +297,15 @@ export default function CheckoutPage() {
                                 ← Back to options
                             </button>
 
-                            <div className="space-y-6 max-w-lg mx-auto text-center py-8">
-                                <h3 className="text-xl font-semibold">Guest Checkout</h3>
-                                <p className="text-muted-foreground mb-6">
-                                    You will be asked to enter your shipping details securely during payment.
-                                </p>
+                            <h2 className="text-2xl font-bold mb-6">Shipping Address</h2>
+                            <p className="text-muted-foreground mb-6">
+                                Please enter your shipping address to continue with payment.
+                            </p>
 
-                                <Button
-                                    onClick={() => handlePayment(true)}
-                                    size="lg"
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md h-auto py-4"
-                                >
-                                    <div className="flex flex-col items-center">
-                                        <div className="flex items-center text-lg mb-1">
-                                            <Zap className="w-5 h-5 mr-2 fill-current" />
-                                            Proceed to Secure Checkout
-                                        </div>
-                                        <span className="text-xs opacity-90 font-normal">Enter address & pay via Razorpay</span>
-                                    </div>
-                                </Button>
-                            </div>
+                            <GuestAddressForm
+                                onSubmit={(addr) => setSelectedAddress(addr)}
+                                onBack={() => setCheckoutMode('choice')}
+                            />
                         </div>
                     )}
 
