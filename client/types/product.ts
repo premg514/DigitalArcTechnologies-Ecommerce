@@ -22,6 +22,7 @@ export interface Product {
   category: string;
   brand?: string;
   images: ProductImage[];
+  tagline?: string;
   stock: number;
   sku?: string;
   ratings: number;
