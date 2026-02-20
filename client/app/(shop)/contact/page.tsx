@@ -66,9 +66,22 @@ export default function ContactPage() {
                                 </div>
                                 <div className="flex items-start gap-6 group">
                                     <MapPin className="h-6 w-6 text-accent-golden group-hover:scale-110 transition-transform flex-shrink-0" />
-                                    <span className="text-sm font-medium leading-relaxed">                                        123 Organic Way, Health City,<br />
-                                        Karnataka, India - 560001
-                                    </span>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <p className="text-[10px] text-accent-golden font-bold uppercase tracking-wider mb-1">Dispatch Centre 1</p>
+                                            <p className="text-sm font-medium leading-relaxed">
+                                                Lakshmi Nagar Colony, Suraram,<br />
+                                                Hyderabad – 500055
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-accent-golden font-bold uppercase tracking-wider mb-1">Dispatch Centre 2</p>
+                                            <p className="text-sm font-medium leading-relaxed">
+                                                Sai Rajeswari Phase II, Ameenpur,<br />
+                                                Hyderabad - 502032
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -123,68 +123,68 @@ export default function ProductCard({ product }: ProductCardProps) {
                 )}
             </Link>
 
-            <CardContent className="p-4 flex-grow flex flex-col">
-                <div className="flex justify-between items-start gap-2 mb-1">
-                    <Link href={`/products/${product._id}`}>
-                        <h3 className="font-heading font-medium text-lg text-primary-maroon line-clamp-2 hover:text-secondary-terracotta transition-colors">
+            <CardContent className="p-3 sm:p-4 flex-grow flex flex-col">
+                <div className="flex justify-between items-start gap-2 mb-2">
+                    <Link href={`/products/${product._id}`} className="min-w-0 flex-1">
+                        <h3 className="font-heading font-bold text-sm sm:text-lg text-primary line-clamp-2 hover:text-secondary transition-colors leading-tight">
                             {product.name}
                         </h3>
                     </Link>
-                    <span className="text-lg font-semibold text-text-dark whitespace-nowrap">
+                    <span className="text-sm sm:text-lg font-bold text-primary whitespace-nowrap mt-0.5">
                         {formatPrice(product.price)}
                     </span>
                 </div>
 
-                {/* Short Description / Features */}
-                <p className="text-sm text-text-muted mb-3 line-clamp-1 italic">
-                    {product.brand || 'Pure & Natural'} | {product.category} {product.weight ? `| ${product.weight}g` : ''}
+                {/* Tagline or Short Info */}
+                <p className="text-[10px] sm:text-sm text-zinc-500 mb-3 sm:mb-4 line-clamp-1 italic font-medium">
+                    {product.tagline || 'Pure & Natural'}
                 </p>
 
                 {/* Rating */}
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center justify-between gap-1.5 mb-4 sm:mb-5">
                     <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
                             <Star
                                 key={i}
-                                className={`h-3.5 w-3.5 ${i < Math.floor(product.ratings) ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-200'}`}
+                                className={`h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 ${i < Math.floor(product.ratings) ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-200'}`}
                             />
                         ))}
+                        <span className="ml-1 text-[10px] sm:text-xs font-bold text-zinc-600">{product.ratings.toFixed(1)}</span>
                     </div>
-                    <span className="text-xs font-medium text-text-soft">{product.ratings.toFixed(1)}</span>
-                    <span className="text-[10px] text-text-light font-medium uppercase tracking-tight">
-                        | {product.numReviews} Reviews
+                    <span className="text-[8px] sm:text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                        {product.numReviews} Reviews
                     </span>
                 </div>
 
                 {/* Quantity Selector */}
                 <div className="mt-auto">
-                    <div className="flex items-center justify-between border border-border-medium rounded-md overflow-hidden bg-white">
+                    <div className="flex items-center justify-between border border-zinc-200 rounded-lg overflow-hidden bg-white h-9 sm:h-11">
                         <button
                             onClick={decrementQty}
                             disabled={quantity <= 1 || product.stock === 0}
-                            className="px-4 py-2 text-text-muted hover:bg-zinc-100 cursor-pointer transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                            className="flex-1 flex items-center justify-center text-zinc-400 hover:bg-zinc-50 cursor-pointer transition-colors disabled:opacity-30"
                         >
-                            <Minus className="h-4 w-4" />
+                            <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                         </button>
-                        <span className="text-sm font-semibold text-text-dark px-4">
+                        <span className="text-xs sm:text-sm font-bold text-primary px-2 min-w-[30px] text-center">
                             {quantity}
                         </span>
                         <button
                             onClick={incrementQty}
                             disabled={quantity >= product.stock || product.stock === 0}
-                            className="px-4 py-2 text-text-muted hover:bg-zinc-100 cursor-pointer transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                            className="flex-1 flex items-center justify-center text-zinc-400 hover:bg-zinc-50 cursor-pointer transition-colors disabled:opacity-30"
                         >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                         </button>
                     </div>
                 </div>
             </CardContent>
 
-            <CardFooter className="p-4 pt-0">
+            <CardFooter className="p-3 sm:p-4 pt-0">
                 <Button
                     onClick={handleAddToCart}
                     disabled={product.stock === 0}
-                    className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold text-sm uppercase tracking-widest py-6 rounded-md transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:transform-none cursor-pointer shadow-md hover:shadow-lg"
+                    className="w-full bg-secondary hover:bg-secondary-dark text-white font-bold text-[10px] sm:text-xs uppercase tracking-widest h-10 sm:h-12 rounded-lg transition-all active:scale-95 shadow-md"
                 >
                     Add to Cart
                 </Button>

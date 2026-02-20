@@ -8,6 +8,7 @@ exports.getProducts = async (req, res) => {
   try {
     const {
       category,
+      priorityCategory,
       minPrice,
       maxPrice,
       search,
@@ -16,48 +17,70 @@ exports.getProducts = async (req, res) => {
       limit = 12,
     } = req.query;
 
-    // Handle sort
-    let sortQuery = '-createdAt';
-    if (sort === 'newest') sortQuery = '-createdAt';
-    else if (sort === 'price-asc') sortQuery = 'price';
-    else if (sort === 'price-desc') sortQuery = '-price';
-    else if (sort === 'rating') sortQuery = '-ratings';
-    else sortQuery = sort;
+    const skip = (Number(page) - 1) * Number(limit);
+    const limitNum = Number(limit);
 
-    // Build query
-    const query = { isActive: true };
+    // Build Match Stage
+    const matchStage = { isActive: true };
 
     if (category) {
-      query.category = category;
+      matchStage.category = category;
     }
 
     if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      matchStage.price = {};
+      if (minPrice) matchStage.price.$gte = Number(minPrice);
+      if (maxPrice) matchStage.price.$lte = Number(maxPrice);
     }
 
     if (search) {
-      query.$text = { $search: search };
+      matchStage.$text = { $search: search };
     }
 
-    // Execute query with pagination
-    const skip = (Number(page) - 1) * Number(limit);
+    // Handle sort
+    let sortObj = { createdAt: -1 };
+    if (sort === 'price-asc') sortObj = { price: 1 };
+    else if (sort === 'price-desc') sortObj = { price: -1 };
+    else if (sort === 'rating') sortObj = { ratings: -1 };
 
-    const products = await Product.find(query)
-      .sort(sortQuery)
-      .limit(Number(limit))
-      .skip(skip)
-      .select('-reviews');
+    // Built Aggregation Pipeline
+    const pipeline = [{ $match: matchStage }];
 
-    const total = await Product.countDocuments(query);
+    // If search exists, projected score if using $text search results
+    if (search) {
+      pipeline.push({ $addFields: { score: { $meta: 'textScore' } } });
+      sortObj = { score: { $meta: 'textScore' }, ...sortObj };
+    }
+
+    // Priority Category Weighting
+    if (priorityCategory) {
+      pipeline.push({
+        $addFields: {
+          sortPriority: {
+            $cond: { if: { $eq: ['$category', priorityCategory] }, then: 0, else: 1 }
+          }
+        }
+      });
+      // Sort by priority first, then by the requested sort
+      sortObj = { sortPriority: 1, ...sortObj };
+    }
+
+    pipeline.push({ $sort: sortObj });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNum });
+    pipeline.push({ $project: { reviews: 0 } });
+
+    const products = await Product.aggregate(pipeline);
+
+    // Count total for pagination
+    const totalCountResult = await Product.countDocuments(matchStage);
 
     res.status(200).json({
       success: true,
       count: products.length,
-      total,
+      total: totalCountResult,
       page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+      pages: Math.ceil(totalCountResult / limitNum),
       data: products,
     });
   } catch (error) {

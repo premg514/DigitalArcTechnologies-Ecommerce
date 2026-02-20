@@ -11,6 +11,7 @@ export const useProducts = (filters?: ProductFilters) => {
             const params = new URLSearchParams();
 
             if (filters?.category) params.append('category', filters.category);
+            if (filters?.priorityCategory) params.append('priorityCategory', filters.priorityCategory);
             if (filters?.minPrice) params.append('minPrice', filters.minPrice.toString());
             if (filters?.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
             if (filters?.search) params.append('search', filters.search);

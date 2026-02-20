@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, Search, Menu, X, ChevronDown } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, ChevronDown } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useCategories } from '@/hooks/useProducts';
@@ -111,14 +111,6 @@ export default function Header() {
 
                     {/* Actions - Top Right */}
                     <div className="flex items-center space-x-1 sm:space-x-2">
-                        {/* Search Icon */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-sage-soft hover:text-secondary hover:bg-cream-beige transition-all cursor-pointer"
-                        >
-                            <Search className="h-5 w-5" />
-                        </Button>
 
                         {/* User/Account Icon */}
                         {isAuthenticated ? (
