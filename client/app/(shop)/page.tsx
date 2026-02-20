@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import HeroSection from '@/components/shop/HeroSection';
 import ProductGrid from '@/components/shop/ProductGrid';
@@ -10,7 +10,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SORT_OPTIONS } from '@/lib/constants';
-import { Search, X } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -19,7 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-export default function HomePage() {
+function HomeContent() {
     const searchParams = useSearchParams();
     const [searchInput, setSearchInput] = useState('');
 
@@ -75,8 +75,7 @@ export default function HomePage() {
             {/* Hero Section */}
             <HeroSection />
 
-            {/* All Products */}
-            {/* All Products */}
+            {/* All Products Section */}
             <section id="product" className="bg-cream py-16">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-12">
@@ -178,5 +177,17 @@ export default function HomePage() {
             {/* Recipes Section */}
             <RecipeSection />
         </div>
+    );
+}
+
+export default function HomePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <Loader2 className="h-12 w-12 animate-spin text-secondary" />
+            </div>
+        }>
+            <HomeContent />
+        </Suspense>
     );
 }
