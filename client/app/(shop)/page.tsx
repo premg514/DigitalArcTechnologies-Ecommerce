@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import HeroSection from '@/components/shop/HeroSection';
 import ProductGrid from '@/components/shop/ProductGrid';
+import CategorySection from '@/components/shop/CategorySection';
+import RecipeSection from '@/components/shop/RecipeSection';
 import { useProducts } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -169,6 +171,12 @@ export default function HomePage() {
                     )}
                 </div>
             </section>
+
+            {/* Shop by Category Section */}
+            <CategorySection />
+
+            {/* Recipes Section */}
+            <RecipeSection />
         </div>
     );
 }
