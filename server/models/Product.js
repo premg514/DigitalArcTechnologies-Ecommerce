@@ -111,6 +111,11 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    tagline: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Tagline cannot exceed 100 characters'],
+    },
     isActive: {
       type: Boolean,
       default: true,

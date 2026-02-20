@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import api from '@/lib/api';
 
 export default function ProductDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const productId = params.id as string;
     const { data: product, isLoading } = useProduct(productId);
     const { addItem } = useCart();
@@ -118,6 +119,18 @@ export default function ProductDetailPage() {
         });
     };
 
+    const handleBuyNow = () => {
+        addItem({
+            productId: product._id,
+            name: product.name,
+            price: product.price,
+            quantity,
+            image: product.images[0]?.url || '/placeholder.png',
+            stock: product.stock,
+        });
+        router.push('/checkout');
+    };
+
     const handleQuantityDecrease = () => {
         setQuantity((prev) => Math.max(1, prev - 1));
     };
@@ -183,11 +196,6 @@ export default function ProductDetailPage() {
                                         {discount}% OFF
                                     </div>
                                 )}
-                                {product.stock <= 5 && product.stock > 0 && (
-                                    <div className="bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-full organic-shadow uppercase tracking-wider">
-                                        Only {product.stock} Left
-                                    </div>
-                                )}
                             </div>
 
                             {/* Nav Buttons */}
@@ -239,9 +247,9 @@ export default function ProductDetailPage() {
                     {/* Right: Product Info (7/12) */}
                     <div className="lg:col-span-7 space-y-8 lg:sticky lg:top-24">
                         <div className="space-y-4">
-                            {/* Category & Rating */}
+                            {/* Category & Rating (Tagline below title) */}
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium uppercase tracking-widest text-secondary">
+                                <span className="text-sm font-medium uppercase tracking-widest text-secondary invisible">
                                     {product.category}
                                 </span>
                                 <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border border-zinc-100">
@@ -253,10 +261,17 @@ export default function ProductDetailPage() {
                                 </div>
                             </div>
 
-                            {/* Title */}
-                            <h1 className="text-3xl md:text-4xl font-heading font-semibold text-primary leading-tight">
-                                {product.name}
-                            </h1>
+                            {/* Title & Tagline */}
+                            <div className="space-y-2">
+                                <h1 className="text-3xl md:text-4xl font-heading font-semibold text-primary leading-tight">
+                                    {product.name}
+                                </h1>
+                                {product.tagline && (
+                                    <p className="text-lg md:text-xl font-medium text-secondary italic">
+                                        {product.tagline}
+                                    </p>
+                                )}
+                            </div>
 
                             {/* Price */}
                             <div className="flex items-center gap-4 py-3">
@@ -278,117 +293,119 @@ export default function ProductDetailPage() {
                             </div>
                         </div>
 
-                        {/* Stock & Description */}
+                        {/* Description */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                                <div className={cn(
-                                    "h-2 w-2 rounded-full animate-pulse",
-                                    product.stock > 0 ? "bg-emerald-500" : "bg-red-500"
-                                )} />
-                                <span className={cn(
-                                    "text-sm font-medium",
-                                    product.stock > 0 ? "text-emerald-600" : "text-red-600"
-                                )}>
-                                    {product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
-                                </span>
-                            </div>
                             <p className="text-zinc-500 leading-relaxed text-base font-normal">
                                 {product.description}
                             </p>
                         </div>
 
                         {/* Delivery Check Section */}
-                        <div className="p-6 rounded-lg bg-white border border-zinc-100 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2 text-primary font-medium">
-                                <MapPin className="h-4 w-4 text-secondary" />
-                                <span className="text-base">Delivery Availability</span>
+                        <div className="space-y-4 p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100">
+                            <div className="flex items-center gap-2 text-primary">
+                                <MapPin className="h-4 w-4" />
+                                <span className="text-sm font-semibold uppercase tracking-wider">Check Delivery</span>
                             </div>
                             <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter Pincode"
-                                        maxLength={6}
-                                        value={pincode}
-                                        onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                                        className="w-full text-sm p-2.5 rounded-lg border border-zinc-200 focus:border-secondary outline-none transition-all"
-                                    />
-                                    {pincodeStatus === 'checking' && (
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <Loader2 className="h-4 w-4 text-secondary animate-spin" />
-                                        </div>
-                                    )}
-                                </div>
+                                <input
+                                    type="text"
+                                    value={pincode}
+                                    onChange={(e) => setPincode(e.target.value)}
+                                    placeholder="Enter 6-digit Pincode"
+                                    className="flex-1 px-4 py-2 rounded-xl border border-zinc-200 text-sm focus:border-secondary transition-all outline-none"
+                                />
                                 <Button
                                     onClick={handlePincodeCheck}
                                     variant="outline"
-                                    className="rounded-lg h-[42px] px-6 text-sm font-medium"
+                                    disabled={pincodeStatus === 'checking'}
+                                    className="rounded-xl px-6 border-secondary text-secondary hover:bg-secondary hover:text-white"
                                 >
-                                    Check
+                                    {pincodeStatus === 'checking' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Check'}
                                 </Button>
                             </div>
-                            {pincodeStatus !== 'idle' && pincodeStatus !== 'checking' && (
+                            {pincodeStatus !== 'idle' && (
                                 <p className={cn(
-                                    "text-xs font-medium flex items-center gap-1.5",
-                                    pincodeStatus === 'allowed' ? "text-emerald-600" : "text-red-500"
+                                    "text-xs font-medium",
+                                    pincodeStatus === 'allowed' ? 'text-emerald-600' : 'text-red-600'
                                 )}>
-                                    {pincodeStatus === 'allowed' ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
                                     {pincodeMessage}
                                 </p>
                             )}
                         </div>
 
                         {/* Actions Container */}
-                        <div className="p-8 rounded-lg bg-white border border-cream organic-shadow-lg space-y-8">
-                            <div className="flex flex-wrap items-end gap-8">
-                                {/* Quantity */}
-                                <div className="space-y-3">
-                                    <label className="text-sm font-semibold uppercase tracking-widest text-zinc-400">Quantity</label>
-                                    <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-lg p-1 shadow-sm">
-                                        <button
-                                            onClick={handleQuantityDecrease}
-                                            disabled={quantity <= 1}
-                                            className="h-10 w-10 flex items-center justify-center rounded-md hover:bg-white transition-colors disabled:opacity-30"
-                                        >
-                                            <Minus className="h-4 w-4" />
-                                        </button>
-                                        <span className="w-10 text-center font-medium text-primary">{quantity}</span>
-                                        <button
-                                            onClick={handleQuantityIncrease}
-                                            disabled={quantity >= product.stock}
-                                            className="h-10 w-10 flex items-center justify-center rounded-md hover:bg-white transition-colors disabled:opacity-30"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                        </button>
-                                    </div>
+                        <div className="space-y-6">
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex items-center bg-white border border-zinc-200 rounded-xl px-2 h-14">
+                                    <button
+                                        className="h-10 w-10 flex items-center justify-center text-primary hover:bg-zinc-50 rounded-lg transition-colors"
+                                        onClick={handleQuantityDecrease}
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                    </button>
+                                    <span className="w-12 text-center font-bold text-primary">{quantity}</span>
+                                    <button
+                                        className="h-10 w-10 flex items-center justify-center text-primary hover:bg-zinc-50 rounded-lg transition-colors"
+                                        onClick={handleQuantityIncrease}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </button>
                                 </div>
-
-                                {/* Add to Cart */}
                                 <Button
                                     onClick={handleAddToCart}
                                     disabled={product.stock === 0}
-                                    size="lg"
-                                    className="flex-1 min-w-[200px] h-14 rounded-lg bg-primary hover:bg-primary-dark text-white font-semibold text-lg organic-shadow transition-all hover:-translate-y-1 active:scale-95 group"
+                                    className="flex-1 h-14 bg-secondary hover:bg-secondary-dark text-white rounded-xl organic-shadow font-bold text-base"
                                 >
-                                    <ShoppingCart className="mr-3 h-5 w-5 transition-transform group-hover:rotate-12" />
+                                    <ShoppingCart className="mr-2 h-5 w-5" />
                                     Add to Cart
                                 </Button>
+                                <Button
+                                    onClick={handleBuyNow}
+                                    disabled={product.stock === 0}
+                                    className="flex-1 h-14 bg-primary hover:bg-primary-dark text-white rounded-xl organic-shadow font-bold text-base"
+                                >
+                                    Buy Now
+                                </Button>
                             </div>
+                        </div>
 
-                            {/* Trust Section */}
-                            <div className="grid grid-cols-2 gap-4 py-6 border-t border-zinc-100">
+                        {/* Trust Section */}
+                        <div className="p-8 rounded-lg bg-white border border-cream organic-shadow-lg space-y-8">
+                            <div className="grid grid-cols-2 gap-y-6 gap-x-4 py-8 border-t border-zinc-100">
                                 <div className="flex items-center gap-3">
-                                    <Truck className="h-4 w-4 text-secondary" />
+                                    <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                                        <Truck className="h-5 w-5 text-secondary" />
+                                    </div>
                                     <div>
-                                        <p className="text-sm font-medium text-primary">Priority Shipping</p>
-                                        <p className="text-[9px] text-zinc-400 font-normal uppercase">Doorstep Delivery</p>
+                                        <p className="text-sm font-bold text-primary">Free Delivery</p>
+                                        <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">On All Orders</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <Shield className="h-4 w-4 text-secondary" />
+                                    <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                                        <Shield className="h-5 w-5 text-secondary" />
+                                    </div>
                                     <div>
-                                        <p className="text-sm font-medium text-primary">Pure & Organic</p>
-                                        <p className="text-[9px] text-zinc-400 font-normal uppercase">Lab Certified</p>
+                                        <p className="text-sm font-bold text-primary">Secure Payments</p>
+                                        <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">100% Encrypted</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                                        <CheckCircle2 className="h-5 w-5 text-secondary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-primary">Direct From Source</p>
+                                        <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">No Middlemen</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                                        <Info className="h-5 w-5 text-secondary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-primary">Small Batches</p>
+                                        <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">Freshly Packaged</p>
                                     </div>
                                 </div>
                             </div>
@@ -643,15 +660,24 @@ export default function ProductDetailPage() {
                             </button>
                         </div>
 
-                        {/* Add to Cart - Primary CTA */}
-                        <Button
-                            onClick={handleAddToCart}
-                            disabled={product.stock === 0}
-                            className="flex-1 h-11 sm:h-12 bg-secondary hover:bg-secondary-dark text-white rounded-lg organic-shadow font-bold text-xs sm:text-sm px-2 sm:px-4"
-                        >
-                            <ShoppingCart className="mr-1.5 sm:mr-2 h-4 w-4" />
-                            Add to Cart
-                        </Button>
+                        {/* Add to Cart & Buy Now */}
+                        <div className="flex-1 flex gap-2">
+                            <Button
+                                onClick={handleAddToCart}
+                                disabled={product.stock === 0}
+                                className="flex-1 h-11 sm:h-12 bg-secondary hover:bg-secondary-dark text-white rounded-lg organic-shadow font-bold text-[10px] sm:text-xs px-1"
+                            >
+                                <ShoppingCart className="mr-1 h-3.5 w-3.5" />
+                                Cart
+                            </Button>
+                            <Button
+                                onClick={handleBuyNow}
+                                disabled={product.stock === 0}
+                                className="flex-1 h-11 sm:h-12 bg-white text-primary hover:bg-zinc-50 rounded-lg organic-shadow font-bold text-[10px] sm:text-xs px-1"
+                            >
+                                Buy Now
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

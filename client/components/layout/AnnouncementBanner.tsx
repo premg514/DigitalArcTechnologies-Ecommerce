@@ -12,10 +12,6 @@ const announcements = [
         text: '🚚 Enjoy Free Shipping on orders above ₹1499 | Shop Now',
         link: '/shop',
     },
-    {
-        text: '✨ New Arrivals! Check out our latest organic products',
-        link: '/shop',
-    },
 ];
 
 export default function AnnouncementBanner() {

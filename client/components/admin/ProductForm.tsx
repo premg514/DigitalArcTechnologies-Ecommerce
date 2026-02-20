@@ -36,18 +36,7 @@ import Image from 'next/image';
 const CATEGORIES = [
     'Rice',
     'Jaggery',
-    'Dry Fruits',
-    'Spices',
-    'Millet',
-    'Food',
-    'Electronics',
-    'Clothing',
-    'Books',
-    'Home & Garden',
-    'Sports',
-    'Toys',
-    'Beauty',
-    'Other',
+    'Nuts',
 ];
 
 const productSchema = z.object({
@@ -57,6 +46,7 @@ const productSchema = z.object({
     compareAtPrice: z.coerce.number().min(0, 'Price must be positive').optional(),
     category: z.string().min(1, 'Category is required'),
     stock: z.coerce.number().min(0, 'Stock must be positive'),
+    tagline: z.string().max(100, 'Tagline cannot exceed 100 characters').optional(),
     isActive: z.boolean().default(true),
     isCancellable: z.boolean().default(false),
 });
@@ -91,7 +81,7 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
             description: '',
             price: 0,
             stock: 0,
-            category: 'Other',
+            category: 'Rice',
             isActive: true,
             isCancellable: false,
         };
@@ -216,6 +206,23 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
                                             <FormControl>
                                                 <Input placeholder="Wireless Headphones" {...field} />
                                             </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="tagline"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Product Tagline (Brief Highlight)</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Single Polished | Farm Fresh" {...field} />
+                                            </FormControl>
+                                            <FormDescription>
+                                                Appears on product cards and detail page
+                                            </FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -481,7 +488,7 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
                         {isEditing ? 'Update Product' : 'Create Product'}
                     </Button>
                 </div>
-            </form>
-        </Form>
+            </form >
+        </Form >
     );
 }

@@ -99,15 +99,15 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </div>
                 )}
 
-                {/* Badge (Winter Special / Discount) */}
+                {/* Badge (Tagline / Discount) */}
                 <div className="absolute top-0 right-0 p-3 flex flex-col items-end gap-2">
                     {discount > 0 ? (
                         <div className="bg-secondary-terracotta text-white px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-bl-lg shadow-sm">
                             {discount}% OFF
                         </div>
-                    ) : (
+                    ) : product.tagline && (
                         <div className="bg-[#41888F] text-white px-3 py-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider rounded-bl-lg shadow-sm">
-                            <span>Special Offer</span>
+                            <span>{product.tagline}</span>
                             <Heart className="h-3 w-3 fill-white" />
                         </div>
                     )}
@@ -137,7 +137,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                 {/* Short Description / Features */}
                 <p className="text-sm text-text-muted mb-3 line-clamp-1 italic">
-                    {product.brand || 'Premium Quality'} | {product.category} {product.weight ? `| ${product.weight}g` : ''}
+                    {product.brand || 'Pure & Natural'} | {product.category} {product.weight ? `| ${product.weight}g` : ''}
                 </p>
 
                 {/* Rating */}

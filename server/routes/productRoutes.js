@@ -9,6 +9,7 @@ const {
   createProductReview,
   getFeaturedProducts,
   getAdminProducts,
+  getCategoryList,
 } = require('../controllers/productController');
 const { protect, adminOnly } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -16,6 +17,7 @@ const upload = require('../middleware/upload');
 // Public routes
 router.get('/', getProducts);
 router.get('/featured', getFeaturedProducts);
+router.get('/categories', getCategoryList);
 
 // Admin routes (must be before /:id)
 router.get('/admin', protect, adminOnly, getAdminProducts);

@@ -124,6 +124,10 @@ exports.createProduct = async (req, res) => {
       }
     }
 
+    if (req.body.tagline) {
+      productData.tagline = req.body.tagline;
+    }
+
     const product = await Product.create(productData);
 
     // Emit socket event
@@ -185,6 +189,10 @@ exports.updateProduct = async (req, res) => {
       } catch (e) {
         productData.images = req.body.images;
       }
+    }
+
+    if (req.body.tagline) {
+      productData.tagline = req.body.tagline;
     }
 
     const product = await Product.findByIdAndUpdate(
@@ -393,6 +401,23 @@ exports.getAdminProducts = async (req, res) => {
       page: Number(page),
       pages: Math.ceil(total / Number(limit)),
       data: products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+// @desc    Get list of distinct categories
+// @route   GET /api/products/categories
+// @access  Public
+exports.getCategoryList = async (req, res) => {
+  try {
+    const categories = await Product.distinct('category', { isActive: true });
+    res.status(200).json({
+      success: true,
+      data: categories,
     });
   } catch (error) {
     res.status(500).json({

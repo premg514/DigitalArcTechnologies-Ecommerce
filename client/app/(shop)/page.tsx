@@ -47,8 +47,8 @@ export default function HomePage() {
                         <h2 className="text-3xl md:text-4xl font-heading font-bold text-sage-soft mb-3">
                             Our Products
                         </h2>
-                        <p className="text-sage-muted max-w-2xl mx-auto">
-                            Discover our complete collection of natural and organic products
+                        <p className="text-sage-muted max-w-2xl mx-auto italic">
+                            Discover our complete collection of natural products
                         </p>
                     </div>
 

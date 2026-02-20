@@ -1,8 +1,7 @@
 export const PRODUCT_CATEGORIES = [
-    'First Polished Rice',
+    'Rice',
     'Jaggery',
-    'Dry Fruits',
-    'Other',
+    'Nuts',
 ] as const;
 
 export const ORDER_STATUS = {
@@ -49,6 +48,7 @@ export const API_ENDPOINTS = {
 
     // Products
     PRODUCTS: '/products',
+    CATEGORIES: '/products/categories',
     PRODUCT_BY_ID: (id: string) => `/products/${id}`,
 
     // Orders

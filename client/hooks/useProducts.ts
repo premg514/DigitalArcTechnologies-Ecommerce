@@ -67,3 +67,15 @@ export const useCreateReview = (productId: string) => {
         },
     });
 };
+
+// Get all dynamic categories with products
+export const useCategories = () => {
+    return useQuery<string[]>({
+        queryKey: ['categories'],
+        queryFn: async () => {
+            const { data } = await api.get(API_ENDPOINTS.CATEGORIES);
+            return data.data;
+        },
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+};

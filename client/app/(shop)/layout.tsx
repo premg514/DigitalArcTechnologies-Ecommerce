@@ -2,6 +2,9 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AnnouncementBanner from '@/components/layout/AnnouncementBanner';
 
+import StickyWhatsApp from '@/components/layout/StickyWhatsApp';
+import StickyViewCart from '@/components/layout/StickyViewCart';
+
 export default function ShopLayout({
     children,
 }: {
@@ -15,6 +18,10 @@ export default function ShopLayout({
             </div>
             <main className="flex-1">{children}</main>
             <Footer />
+
+            {/* Mobile Sticky Features */}
+            <StickyWhatsApp />
+            <StickyViewCart />
         </div>
     );
 }
