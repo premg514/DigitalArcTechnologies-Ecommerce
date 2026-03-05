@@ -23,7 +23,10 @@ exports.getProducts = async (req, res) => {
     const matchStage = { isActive: true };
 
     if (category) {
-      matchStage.category = category;
+      // Create a regex to match the category name or any subcategories (e.g., "Rice" matches "Rice", "Rice Products")
+      // We escape Special chars in category name just in case, and match anything starting with that category string
+      const escapedCategory = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      matchStage.category = { $regex: new RegExp(`^${escapedCategory}`, 'i') };
     }
 
     if (minPrice || maxPrice) {
@@ -387,7 +390,8 @@ exports.getAdminProducts = async (req, res) => {
     const query = {};
 
     if (category) {
-      query.category = category;
+      const escapedCategory = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.category = { $regex: new RegExp(`^${escapedCategory}`, 'i') };
     }
 
     if (minPrice || maxPrice) {
