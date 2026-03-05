@@ -24,8 +24,7 @@ function HomeContent() {
     const [searchInput, setSearchInput] = useState('');
 
     const [filters, setFilters] = useState({
-        category: '',
-        priorityCategory: searchParams.get('category') || '',
+        category: searchParams.get('category') || '',
         search: '',
         sort: 'newest' as const,
         page: 1,
@@ -40,11 +39,11 @@ function HomeContent() {
         return () => clearTimeout(timer);
     }, [searchInput]);
 
-    // Update priority category when searchParams change (from Hero banners)
+    // Update category when searchParams change (from Header/Banners)
     useEffect(() => {
-        const category = searchParams.get('category');
-        if (category) {
-            setFilters(prev => ({ ...prev, priorityCategory: category, category: '', page: 1 }));
+        const categoryParam = searchParams.get('category');
+        if (categoryParam !== null) {
+            setFilters(prev => ({ ...prev, category: categoryParam, page: 1 }));
 
             // Scroll to product section if a category is selected
             const productSection = document.getElementById('product');
@@ -66,8 +65,8 @@ function HomeContent() {
         setFilters((prev) => ({ ...prev, sort: value as any }));
     };
 
-    const clearPriority = () => {
-        setFilters(prev => ({ ...prev, priorityCategory: '' }));
+    const clearCategory = () => {
+        setFilters(prev => ({ ...prev, category: '' }));
     };
 
     return (
@@ -87,15 +86,15 @@ function HomeContent() {
                         </p>
                     </div>
 
-                    {/* Priority Category Indicator */}
-                    {filters.priorityCategory && (
+                    {/* Category Filter Indicator */}
+                    {filters.category && (
                         <div className="flex justify-center mb-6">
                             <div className="flex items-center gap-2 px-4 py-2 bg-secondary/10 border border-secondary/20 rounded-full animate-fadeIn">
                                 <span className="text-xs font-bold text-secondary uppercase tracking-wider">
-                                    Prioritizing: {filters.priorityCategory}
+                                    Category: {filters.category}
                                 </span>
                                 <button
-                                    onClick={clearPriority}
+                                    onClick={clearCategory}
                                     className="text-secondary hover:text-secondary-dark transition-colors"
                                 >
                                     <X className="h-4 w-4" />
