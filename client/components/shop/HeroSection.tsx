@@ -33,7 +33,7 @@ const slides = [
         subtitle: 'Premium Selection',
         description: 'Sourced from select growers, processed with care, and brought to you at their best — honoring the cashew’s true taste.',
         cta: 'Shop Nuts & Seeds',
-        ctaLink: '/?category=Nuts',
+        ctaLink: '/?category=Dry Fruits, Nuts & Seeds',
         backgroundImage: 'https://res.cloudinary.com/deeejohfw/image/upload/v1771585915/hero_cashew_orchard_premium_1771585639697_bhaxua.jpg',
         emoji: '🌰',
     },

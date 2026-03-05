@@ -65,7 +65,7 @@ const recipes = [
     },
     {
         title: 'Crunchy Nut Mix',
-        category: 'Nuts',
+        category: 'Dry Fruits, Nuts & Seeds',
         prepTime: '5 min',
         servings: '2',
         image: 'https://res.cloudinary.com/deeejohfw/image/upload/v1771585915/hero_cashew_orchard_premium_1771585639697_bhaxua.jpg',

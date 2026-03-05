@@ -12,6 +12,7 @@ import { getImageUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { PRODUCT_CATEGORIES } from '@/lib/constants';
 import {
     Form,
     FormControl,
@@ -32,12 +33,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Plus, Trash, X, Upload } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Image from 'next/image';
-
-const CATEGORIES = [
-    'Rice',
-    'Jaggery',
-    'Nuts',
-];
 
 const productSchema = z.object({
     name: z.string().min(1, 'Name is required').max(200),
@@ -331,7 +326,7 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    {CATEGORIES.map((category) => (
+                                                    {PRODUCT_CATEGORIES.map((category) => (
                                                         <SelectItem key={category} value={category}>
                                                             {category}
                                                         </SelectItem>

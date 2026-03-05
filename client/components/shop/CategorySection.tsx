@@ -21,12 +21,12 @@ const categories = [
         href: '/?category=Jaggery'
     },
     {
-        name: 'Nuts',
+        name: 'Dry Fruits, Nuts & Seeds',
         tagline: 'Premium Handpicked Selection',
         icon: Nut,
         color: 'bg-[#F0F2F1]',
         iconColor: 'text-[#5F7A61]',
-        href: '/?category=Nuts'
+        href: '/?category=Dry Fruits, Nuts & Seeds'
     }
 ];
 
