@@ -1,4 +1,4 @@
-# ShopHub - E-Commerce Platform
+# Amrutha - E-Commerce Platform
 
 A full-stack MERN e-commerce application with Next.js frontend and Express.js backend, featuring Razorpay payment integration.
 
@@ -42,8 +42,8 @@ A full-stack MERN e-commerce application with Next.js frontend and Express.js ba
 ### Clone the repository
 
 ```bash
-git clone <repository-url>
-cd "E-Commerce Model Antigravity"
+git clone https://github.com/premg514/DigitalArcTechnologies-Ecommerce.git
+cd DigitalArcTechnologies-Ecommerce
 ```
 
 ### Backend Setup
@@ -53,21 +53,12 @@ cd server
 npm install
 ```
 
-Create a `.env` file in the server directory:
+Copy the example environment file and configure it:
 
-```env
-PORT=5000
-NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=your_super_secret_jwt_key_min_32_characters
-JWT_EXPIRE=7d
-RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_secret_key
-GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-SERVER_URL=http://localhost:5000
-CLIENT_URL=http://localhost:3000
+```bash
+cp .env.example .env
 ```
+*Note for Cloud Engineers: Please review `.env.example` for the required production environment variables such as MongoDB Atlas URI, strong JWT secrets, and Live payment gateway keys.*
 
 ### Frontend Setup
 
@@ -76,12 +67,12 @@ cd client
 npm install
 ```
 
-Create a `.env.local` file in the client directory:
+Copy the example environment file and configure it:
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
-NEXT_PUBLIC_RAZORPAY_KEY_ID=your_razorpay_key_id
+```bash
+cp .env.local.example .env.local
 ```
+*Note for Cloud Engineers: Ensure `NEXT_PUBLIC_API_URL` points to the deployed backend URL.*
 
 ## 🚀 Running the Application
 
@@ -232,7 +223,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Support
 
-For support, email support@shophub.com or create an issue in the repository.
+For support, email support@amrutha.com or create an issue in the repository.
 
 ---
 

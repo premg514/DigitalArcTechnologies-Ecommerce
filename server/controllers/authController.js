@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const crypto = require('crypto');
+const { sendPasswordReset } = require('../utils/emailService');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -128,9 +130,10 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'There is no user with that email',
+      // Do NOT reveal whether the email account exists — prevents user enumeration attacks
+      return res.status(200).json({
+        success: true,
+        message: 'If an account with that email exists, a reset link has been sent.',
       });
     }
 
@@ -139,15 +142,12 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // Create reset url
-    const { sendPasswordReset } = require('../utils/emailService');
-
     try {
       await sendPasswordReset(user, resetToken);
 
       res.status(200).json({
         success: true,
-        message: 'Email sent',
+        message: 'If an account with that email exists, a reset link has been sent.',
       });
     } catch (error) {
       user.resetPasswordToken = undefined;
@@ -174,7 +174,6 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     // Get hashed token
-    const crypto = require('crypto');
     const resetPasswordToken = crypto
       .createHash('sha256')
       .update(req.params.resettoken)

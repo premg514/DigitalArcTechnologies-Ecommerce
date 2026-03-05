@@ -115,8 +115,6 @@ exports.getProductById = async (req, res) => {
 exports.createProduct = async (req, res) => {
   try {
     const productData = { ...req.body };
-    console.log('Create Product Request Body:', req.body);
-    console.log('Create Product Files:', req.files);
 
     // Handle uploaded files
     if (req.files && req.files.length > 0) {

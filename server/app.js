@@ -41,11 +41,11 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// CORS configuration
+// CORS configuration — origins from env vars for secure configuration
 const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:3000',
-  'https://digital-arc-technologies-ecommerce-two.vercel.app'
+  ...(process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim()) : []),
 ].filter(Boolean);
 
 app.use(
@@ -70,14 +70,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Data sanitization against NoSQL injection
-// TEMPORARILY DISABLED - Causes issues with Google OAuth callback
-// TODO: Re-enable with proper configuration or use alternative validation
-// app.use(mongoSanitize({
-//   replaceWith: '_',
-//   onSanitize: ({ req, key }) => {
-//     console.warn(`Sanitized ${key} in request`);
-//   },
-// }));
+// Excluded from OAuth callback route which uses a different payload format
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/auth/google')) return next();
+  mongoSanitize({ replaceWith: '_' })(req, res, next);
+});
 
 
 // Logging
@@ -99,11 +96,22 @@ app.get('/', (req, res) => {
   });
 });
 
-// Rate limiting
+// General API rate limiting
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later',
+  message: { success: false, message: 'Too many requests from this IP, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter rate limit for auth endpoints to prevent brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 auth requests per 15 min
+  message: { success: false, message: 'Too many authentication attempts. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 app.use('/api', limiter);
@@ -118,12 +126,11 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pincodes', pincodeRoutes);
 

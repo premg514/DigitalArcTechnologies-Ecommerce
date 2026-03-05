@@ -22,6 +22,7 @@ export const useProducts = (filters?: ProductFilters) => {
             return { ...data, products: data.data };
         },
         staleTime: 2 * 60 * 1000, // 2 minutes
+        retry: 1,
     });
 };
 
@@ -47,6 +48,7 @@ export const useFeaturedProducts = () => {
             return data.data;
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
+        retry: 1,
     });
 };
 

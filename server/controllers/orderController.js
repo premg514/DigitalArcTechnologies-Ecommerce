@@ -1,5 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
+const crypto = require('crypto');
 const { getIO } = require('../config/socket');
 const { sendOrderConfirmation } = require('../utils/emailService');
 const razorpay = require('../config/razorpay');
@@ -48,7 +50,6 @@ exports.createOrder = async (req, res) => {
 
     if (!userId && shippingAddress?.phone) {
       // Try to find a user with this phone number
-      const User = require('../models/User');
       const userByPhone = await User.findOne({ phone: shippingAddress.phone });
       if (userByPhone) {
         userId = userByPhone._id;
@@ -86,7 +87,6 @@ exports.createOrder = async (req, res) => {
 
         try {
           const payment = await razorpay.payments.fetch(razorpayPaymentId);
-          console.log('Razorpay Payment Details:', JSON.stringify(payment, null, 2));
           paymentEmail = payment.email || paymentEmail;
           paymentPhone = payment.contact || paymentPhone;
 
@@ -127,7 +127,6 @@ exports.createOrder = async (req, res) => {
             if (!rzpAddress && razorpayOrderId) {
               try {
                 const order = await razorpay.orders.fetch(razorpayOrderId);
-                console.log('Razorpay Order Details:', JSON.stringify(order, null, 2));
                 rzpAddress = getAddressFromObject(order);
               } catch (orderError) {
                 console.error('Error fetching Razorpay order details:', orderError);
@@ -152,13 +151,12 @@ exports.createOrder = async (req, res) => {
 
         if (!orderData.user && paymentPhone) {
           try {
-            const User = require('../models/User');
             const userByPhone = await User.findOne({ phone: paymentPhone });
             if (userByPhone) {
               orderData.user = userByPhone._id;
             }
           } catch (userError) {
-            console.error('Error finding user by phone after RMC fetch:', userError);
+            if (process.env.NODE_ENV === 'development') console.error('Error finding user by phone:', userError);
           }
         }
 
@@ -497,7 +495,7 @@ exports.cancelOrderItem = async (req, res) => {
         // Ensure it's an integer for Razorpay (paise)
         const refundAmount = Math.round(item.price * item.quantity * 100);
 
-        console.log(`Initiating partial refund for Item ${item.name} (${item._id}): ${refundAmount} paise`);
+        console.log(`Initiating partial refund for Item ${item.name} (${item._id}): ${Math.round(item.price * item.quantity * 100)} paise`);
 
         // Initiate refund via Razorpay
         const refund = await razorpay.payments.refund(paymentId, {
