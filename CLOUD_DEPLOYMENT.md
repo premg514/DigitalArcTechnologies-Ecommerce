@@ -128,14 +128,14 @@
 | `CLIENT_URL` | Frontend URL (e.g. `https://main.d1234.amplifyapp.com`) |
 | `SERVER_URL` | This backend's URL |
 | `CORS_ALLOWED_ORIGINS` | All allowed frontend domains, comma-separated |
-| `GOOGLE_CLIENT_ID` | Google OAuth (optional) |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth (optional) |
-| `SMTP_HOST` | `smtp.gmail.com` (optional) |
-| `SMTP_PORT` | `587` (optional) |
-| `SMTP_SECURE` | `false` (optional) |
-| `SMTP_USER` | Sender email (optional) |
-| `SMTP_PASS` | App-specific password (optional) |
-| `EMAIL_FROM` | `"Amrutha" <noreply@yourdomain.com>` (optional) |
+| `GOOGLE_CLIENT_ID` | Google OAuth App Client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth App Client Secret |
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `587` |
+| `SMTP_SECURE` | `false` |
+| `SMTP_USER` | Email address |
+| `SMTP_PASS` | App-specific password |
+| `EMAIL_FROM` | `"Amrutha" <noreply@yourdomain.com>` |
 
 ---
 
