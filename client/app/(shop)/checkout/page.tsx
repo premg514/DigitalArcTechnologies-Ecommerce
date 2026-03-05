@@ -15,7 +15,7 @@ import AddressSelector from '@/components/checkout/AddressSelector';
 import GuestAddressForm from '@/components/checkout/GuestAddressForm';
 import OrderSuccessModal from '@/components/checkout/OrderSuccessModal';
 import { Address } from '@/types/user';
-import { LogIn, UserPlus, User, Zap } from 'lucide-react';
+import { LogIn, UserPlus, User, Zap, AlertTriangle } from 'lucide-react';
 
 declare global {
     interface Window {
@@ -257,15 +257,27 @@ export default function CheckoutPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="hover:border-primary transition-colors cursor-pointer" onClick={() => setCheckoutMode('guest')}>
+                        <Card className="hover:border-amber-400 border-2 transition-colors cursor-pointer relative" onClick={() => setCheckoutMode('guest')}>
                             <CardHeader className="text-center">
-                                <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-primary">
+                                <div className="mx-auto bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-amber-600">
                                     <User className="h-6 w-6" />
                                 </div>
                                 <CardTitle>Guest Checkout</CardTitle>
                             </CardHeader>
-                            <CardContent className="text-center text-sm text-zinc-500">
-                                Enter details manually for this order.
+                            <CardContent className="text-center text-sm text-zinc-500 space-y-3">
+                                <p>Continue without creating an account.</p>
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-left">
+                                    <p className="text-amber-700 font-semibold text-xs mb-2 flex items-center gap-1">
+                                        <AlertTriangle className="h-3 w-3" />
+                                        Limitations as a Guest:
+                                    </p>
+                                    <ul className="text-amber-600 text-xs space-y-1 list-disc list-inside">
+                                        <li>Cannot view order history</li>
+                                        <li>Cannot cancel or track orders</li>
+                                        <li>No saved addresses</li>
+                                        <li>Order confirmation email may not be sent</li>
+                                    </ul>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -276,6 +288,20 @@ export default function CheckoutPage() {
                 <>
                     {checkoutMode === 'guest' && !selectedAddress && (
                         <div className="mb-8">
+                            {/* Guest Limitations Banner */}
+                            <div className="mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-semibold text-amber-700 mb-1">You are checking out as a Guest</p>
+                                    <ul className="text-xs text-amber-600 space-y-1 list-disc list-inside">
+                                        <li>Your order history will <strong>not</strong> be saved to any account</li>
+                                        <li>You <strong>cannot</strong> view, cancel or track this order later</li>
+                                        <li>Saved addresses are not available</li>
+                                        <li>Order confirmation email depends on the phone number you provide</li>
+                                        <li><strong>Consider <a href="/register" className="underline hover:text-amber-900">creating an account</a></strong> for a better experience</li>
+                                    </ul>
+                                </div>
+                            </div>
                             <GuestAddressForm
                                 onSubmit={(data) => setSelectedAddress(data)}
                                 onBack={() => setCheckoutMode('choice')}
