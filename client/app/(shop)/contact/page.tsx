@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare, Loader2, Facebook, Twitter, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare, Loader2, Facebook, Twitter, Instagram, User2, AtSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
 import { CONTACT_CONFIG } from '@/lib/constants';
@@ -129,46 +130,62 @@ export default function ContactPage() {
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-10">
                                 {/* Form Grid */}
-                                <div className="grid md:grid-cols-2 gap-x-12 gap-y-10">
-                                    <div className="space-y-2 border-b border-[#e0e0e0] group pb-1">
-                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">First Name</label>
-                                        <input
-                                            required
-                                            name="first_name"
-                                            type="text"
-                                            className="w-full bg-transparent text-sm py-1 !outline-none !ring-0 !focus:outline-none !focus:ring-0 !focus-visible:outline-none !focus-visible:ring-0 text-foreground font-medium"
-                                            placeholder="First Name"
-                                        />
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {/* First Name */}
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">First Name</label>
+                                        <div className="relative">
+                                            <User2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                            <Input
+                                                required
+                                                name="first_name"
+                                                type="text"
+                                                placeholder="First Name"
+                                                className="pl-10"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2 border-b border-[#e0e0e0] group pb-1">
-                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Name</label>
-                                        <input
-                                            required
-                                            name="last_name"
-                                            type="text"
-                                            className="w-full bg-transparent text-sm py-1 !outline-none !ring-0 !focus:outline-none !focus:ring-0 !focus-visible:outline-none !focus-visible:ring-0 text-foreground font-medium"
-                                            placeholder="John Doe"
-                                        />
+                                    {/* Last Name */}
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Last Name</label>
+                                        <div className="relative">
+                                            <User2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                            <Input
+                                                required
+                                                name="last_name"
+                                                type="text"
+                                                placeholder="Doe"
+                                                className="pl-10"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2 border-b border-[#e0e0e0] group pb-1">
-                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Mail</label>
-                                        <input
-                                            required
-                                            name="email"
-                                            type="email"
-                                            className="w-full bg-transparent text-sm py-1 !outline-none !ring-0 !focus:outline-none !focus:ring-0 !focus-visible:outline-none !focus-visible:ring-0 text-foreground font-medium"
-                                            placeholder="ersadwork@gmail.com"
-                                        />
+                                    {/* Email */}
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Email</label>
+                                        <div className="relative">
+                                            <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                            <Input
+                                                required
+                                                name="email"
+                                                type="email"
+                                                placeholder="you@example.com"
+                                                className="pl-10"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2 border-b border-[#e0e0e0] group pb-1">
-                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Phone</label>
-                                        <input
-                                            required
-                                            name="phone"
-                                            type="tel"
-                                            className="w-full bg-transparent text-sm py-1 !outline-none !ring-0 !focus:outline-none !focus:ring-0 !focus-visible:outline-none !focus-visible:ring-0 text-foreground font-medium"
-                                            placeholder="+91 98765 43210"
-                                        />
+                                    {/* Phone */}
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Phone</label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                            <Input
+                                                required
+                                                name="phone"
+                                                type="tel"
+                                                placeholder="+91 98765 43210"
+                                                className="pl-10"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -201,15 +218,18 @@ export default function ContactPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2 border-b border-[#e0e0e0] group pb-1">
-                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Message</label>
-                                    <textarea
-                                        required
-                                        name="message"
-                                        rows={1}
-                                        className="w-full bg-transparent text-sm py-1 !outline-none !ring-0 !focus:outline-none !focus:ring-0 !focus-visible:outline-none !focus-visible:ring-0 text-foreground font-medium resize-none"
-                                        placeholder="Write your message.."
-                                    />
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Message</label>
+                                    <div className="relative">
+                                        <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+                                        <textarea
+                                            required
+                                            name="message"
+                                            rows={4}
+                                            className="w-full pl-10 pr-4 py-2 text-sm border border-input rounded-md bg-background text-foreground font-medium resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+                                            placeholder="Write your message.."
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Submit Button */}
