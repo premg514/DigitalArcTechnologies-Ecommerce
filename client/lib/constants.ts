@@ -49,7 +49,7 @@ export const TAX_RATE = 0; // Tax removed as per request
 
 export const SHIPPING_CHARGES = {
     FREE_SHIPPING_THRESHOLD: 1499,
-    STANDARD_CHARGE: 0,
+    STANDARD_CHARGE: 100,
 } as const;
 
 export const API_ENDPOINTS = {
