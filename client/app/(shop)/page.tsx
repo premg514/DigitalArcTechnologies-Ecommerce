@@ -52,6 +52,8 @@ function HomeContent() {
                 const top = productSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
                 window.scrollTo({ top, behavior: 'smooth' });
             }
+        } else {
+            setFilters(prev => ({ ...prev, category: '', page: 1 }));
         }
     }, [searchParams]);
 
