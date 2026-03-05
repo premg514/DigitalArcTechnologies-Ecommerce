@@ -2,6 +2,19 @@ export const PRODUCT_CATEGORIES = [
     'Rice',
     'Jaggery',
     'Nuts',
+    'Cold Pressed Oils',
+    'Millets',
+    'Spices',
+    'Dals',
+    'Forest Honey',
+    'Salts',
+    'Organic Sugar',
+    'Teas',
+    'Baking Products',
+    'Flours',
+    'Pickles',
+    'Ready To Cook',
+    'Dry Fruits',
 ] as const;
 
 export const ORDER_STATUS = {
@@ -32,10 +45,10 @@ export const SORT_OPTIONS = [
 
 export const ITEMS_PER_PAGE = 12;
 
-export const TAX_RATE = 0.18; // 18% GST
+export const TAX_RATE = 0; // Tax removed as per request
 
 export const SHIPPING_CHARGES = {
-    FREE_SHIPPING_THRESHOLD: 500,
+    FREE_SHIPPING_THRESHOLD: 1499,
     STANDARD_CHARGE: 0,
 } as const;
 

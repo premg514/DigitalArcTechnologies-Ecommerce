@@ -54,12 +54,11 @@ export default function CheckoutPage() {
     }, [user, selectedAddress]);
 
     const subtotal = getTotalPrice();
-    const tax = subtotal * TAX_RATE;
     const shipping =
         subtotal >= SHIPPING_CHARGES.FREE_SHIPPING_THRESHOLD
             ? 0
             : SHIPPING_CHARGES.STANDARD_CHARGE;
-    const total = subtotal + tax + shipping;
+    const total = subtotal + shipping;
 
     const checkPincode = async (pincode: string) => {
         try {
@@ -94,7 +93,7 @@ export default function CheckoutPage() {
             const { data: paymentResponse } = await api.post('/payment/create-order', {
                 items: items,
                 shippingPrice: shipping,
-                taxPrice: tax
+                taxPrice: 0
             });
 
             const options = {
@@ -170,7 +169,7 @@ export default function CheckoutPage() {
                             }),
                             paymentMethod: 'razorpay',
                             itemsPrice: subtotal,
-                            taxPrice: tax,
+                            taxPrice: 0,
                             shippingPrice: shipping,
                             totalPrice: total,
                             paymentResult: {
@@ -276,52 +275,11 @@ export default function CheckoutPage() {
             ) : (
                 <>
                     {checkoutMode === 'guest' && !selectedAddress && (
-                        <div className="mb-8 max-w-lg mx-auto">
-                            <button
-                                onClick={() => setCheckoutMode('choice')}
-                                className="text-sm text-zinc-500 hover:text-zinc-800 mb-4"
-                            >
-                                ← Back to options
-                            </button>
-
-                            <div className="space-y-6 text-center py-8">
-                                <h3 className="text-2xl font-bold">Guest Checkout</h3>
-                                <p className="text-muted-foreground mb-6">
-                                    Click below to proceed. You'll enter your shipping address and payment details securely via Razorpay Magic Checkout.
-                                </p>
-
-                                {/* Warning for guests */}
-                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left mb-6">
-                                    <div className="flex items-start gap-3">
-                                        <div className="text-amber-600 mt-0.5">
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-amber-900 text-sm">Guest Order Limitation</p>
-                                            <p className="text-amber-800 text-xs mt-1">
-                                                You won't be able to track this order after checkout. Create an account to track orders and view order history.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    onClick={() => handlePayment(true)}
-                                    size="lg"
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg h-auto py-4"
-                                    disabled={isProcessing}
-                                >
-                                    <div className="flex flex-col items-center">
-                                        <div className="flex items-center text-lg mb-1">
-                                            <Zap className="w-5 h-5 mr-2 fill-current" />
-                                            {isProcessing ? 'Processing...' : 'Proceed with Magic Checkout'}
-                                        </div>
-                                        <span className="text-xs opacity-90 font-normal">Secure address & payment via Razorpay</span>
-                                    </div>
-                                </Button>
-                            </div>
+                        <div className="mb-8">
+                            <GuestAddressForm
+                                onSubmit={(data) => setSelectedAddress(data)}
+                                onBack={() => setCheckoutMode('choice')}
+                            />
                         </div>
                     )}
 
@@ -375,20 +333,12 @@ export default function CheckoutPage() {
                                             <span className="text-zinc-600 dark:text-zinc-400">Products Total</span>
                                             <span className="font-medium">{formatPrice(subtotal)}</span>
                                         </div>
-                                        {/* Hiding Tax and Shipping as per user request to only show product price
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-zinc-600 dark:text-zinc-400">
-                                            Tax (GST {TAX_RATE * 100}%)
-                                        </span>
-                                        <span className="font-medium">{formatPrice(tax)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-zinc-600 dark:text-zinc-400">Shipping</span>
-                                        <span className="font-medium">
-                                            {shipping === 0 ? 'FREE' : formatPrice(shipping)}
-                                        </span>
-                                    </div>
-                                    */}
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-zinc-600 dark:text-zinc-400">Shipping</span>
+                                            <span className="font-medium">
+                                                {shipping === 0 ? 'FREE' : formatPrice(shipping)}
+                                            </span>
+                                        </div>
                                         <div className="border-t pt-4">
                                             <div className="flex justify-between">
                                                 <span className="text-lg font-semibold">Total Amount</span>

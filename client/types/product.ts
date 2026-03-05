@@ -23,6 +23,7 @@ export interface Product {
   brand?: string;
   images: ProductImage[];
   tagline?: string;
+  highlight?: string;
   stock: number;
   sku?: string;
   ratings: number;

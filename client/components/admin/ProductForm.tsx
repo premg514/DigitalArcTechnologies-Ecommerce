@@ -47,6 +47,7 @@ const productSchema = z.object({
     category: z.string().min(1, 'Category is required'),
     stock: z.coerce.number().min(0, 'Stock must be positive'),
     tagline: z.string().max(100, 'Tagline cannot exceed 100 characters').optional(),
+    highlight: z.string().max(50, 'Highlight cannot exceed 50 characters').optional(),
     isActive: z.boolean().default(true),
     isCancellable: z.boolean().default(false),
 });
@@ -84,6 +85,8 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
             category: 'Rice',
             isActive: true,
             isCancellable: false,
+            tagline: '',
+            highlight: '',
         };
 
     const form = useForm<ProductFormValues>({
@@ -221,7 +224,24 @@ export default function ProductForm({ initialData, isEditing = false }: ProductF
                                                 <Input placeholder="Single Polished | Farm Fresh" {...field} />
                                             </FormControl>
                                             <FormDescription>
-                                                Appears on product cards and detail page
+                                                Appears below the product title
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="highlight"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Product Highlight</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Single Polished | Farm Fresh" {...field} />
+                                            </FormControl>
+                                            <FormDescription>
+                                                Appears at the top badge of product cards
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>

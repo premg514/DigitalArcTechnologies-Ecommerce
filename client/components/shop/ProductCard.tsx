@@ -105,9 +105,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                         <div className="bg-secondary-terracotta text-white px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-bl-lg shadow-sm">
                             {discount}% OFF
                         </div>
-                    ) : product.tagline && (
+                    ) : product.highlight && (
                         <div className="bg-[#41888F] text-white px-3 py-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider rounded-bl-lg shadow-sm">
-                            <span>{product.tagline}</span>
+                            <span>{product.highlight}</span>
                             <Heart className="h-3 w-3 fill-white" />
                         </div>
                     )}

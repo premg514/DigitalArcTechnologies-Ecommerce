@@ -42,6 +42,11 @@ const slides = [
 export default function HeroSection() {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+    // Minimum swipe distance to trigger slide change
+    const minSwipeDistance = 50;
 
     // Auto-advance slides
     useEffect(() => {
@@ -54,8 +59,40 @@ export default function HeroSection() {
         return () => clearInterval(interval);
     }, [isAutoPlaying]);
 
+    const onTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        if (isLeftSwipe || isRightSwipe) {
+            setIsAutoPlaying(false);
+            if (isLeftSwipe) {
+                // Swipe left, go to next slide
+                setCurrentSlide((prev) => (prev + 1) % slides.length);
+            } else {
+                // Swipe right, go to previous slide
+                setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+            }
+        }
+    };
+
     return (
-        <section className="relative overflow-hidden bg-[#FAF9F6]">
+        <section
+            className="relative overflow-hidden bg-[#FAF9F6]"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+        >
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-[400px] h-[300px] opacity-[0.03] text-secondary -mr-20 -mt-20 pointer-events-none -z-0">
                 <svg viewBox="0 0 270 165" fill="currentColor" className="w-full h-full animate-float-slow" preserveAspectRatio="none">

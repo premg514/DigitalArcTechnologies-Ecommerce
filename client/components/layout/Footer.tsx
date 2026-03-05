@@ -16,10 +16,6 @@ export default function Footer() {
                                 Amrutha
                             </h3>
                         </Link>
-                        <p className="text-sm text-zinc-500 leading-relaxed max-w-xs italic">
-                            Your trusted source for pure, naturally grown products.<br />
-                            Bringing health and wellness to your doorstep.
-                        </p>
                         <div className="flex items-center gap-4">
                             <a href="#" className="text-zinc-400 hover:text-secondary transition-colors">
                                 <Facebook className="h-5 w-5" />
@@ -117,8 +113,6 @@ export default function Footer() {
                         © {new Date().getFullYear()} Amrutha. All rights reserved.
                     </p>
                     <div className="flex flex-wrap justify-center gap-8 items-center text-[11px] font-medium text-zinc-400 uppercase tracking-widest">
-                        <Link href="/" className="hover:text-secondary transition-colors">Privacy Policy</Link>
-                        <Link href="/" className="hover:text-secondary transition-colors">Terms of Service</Link>
                         <Link
                             href="https://www.digitalarc.space"
                             target="_blank"

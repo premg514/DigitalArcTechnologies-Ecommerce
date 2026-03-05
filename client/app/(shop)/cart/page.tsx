@@ -13,12 +13,11 @@ export default function CartPage() {
     const { items, getTotalPrice, clearCart } = useCart();
 
     const subtotal = getTotalPrice();
-    const tax = subtotal * TAX_RATE;
     const shipping =
         subtotal >= SHIPPING_CHARGES.FREE_SHIPPING_THRESHOLD
             ? 0
             : SHIPPING_CHARGES.STANDARD_CHARGE;
-    const total = subtotal + tax + shipping;
+    const total = subtotal + shipping;
 
     if (items.length === 0) {
         return (
@@ -63,15 +62,6 @@ export default function CartPage() {
                                 <CartItem key={item.productId} item={item} />
                             ))}
                         </CardContent>
-                        <CardFooter>
-                            <Button
-                                variant="outline"
-                                onClick={clearCart}
-                                className="text-red-600 hover:text-red-700"
-                            >
-                                Clear Cart
-                            </Button>
-                        </CardFooter>
                     </Card>
                 </div>
 
@@ -85,12 +75,6 @@ export default function CartPage() {
                             <div className="flex justify-between text-sm">
                                 <span className="text-zinc-600 dark:text-zinc-400">Subtotal</span>
                                 <span className="font-medium">{formatPrice(subtotal)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-zinc-600 dark:text-zinc-400">
-                                    Tax (GST {TAX_RATE * 100}%)
-                                </span>
-                                <span className="font-medium">{formatPrice(tax)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-zinc-600 dark:text-zinc-400">Shipping</span>

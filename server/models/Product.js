@@ -101,6 +101,11 @@ const productSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, 'Tagline cannot exceed 100 characters'],
     },
+    highlight: {
+      type: String,
+      trim: true,
+      maxlength: [50, 'Highlight cannot exceed 50 characters'],
+    },
     isActive: {
       type: Boolean,
       default: true,
