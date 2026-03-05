@@ -6,7 +6,8 @@ const { getIO } = require('../config/socket');
 // @access  Public
 exports.getProducts = async (req, res) => {
   try {
-    category,
+    const {
+      category,
       minPrice,
       maxPrice,
       search,
@@ -15,65 +16,65 @@ exports.getProducts = async (req, res) => {
       limit = 12,
     } = req.query;
 
-  const skip = (Number(page) - 1) * Number(limit);
-  const limitNum = Number(limit);
+    const skip = (Number(page) - 1) * Number(limit);
+    const limitNum = Number(limit);
 
-  // Build Match Stage
-  const matchStage = { isActive: true };
+    // Build Match Stage
+    const matchStage = { isActive: true };
 
-  if (category) {
-    matchStage.category = category;
+    if (category) {
+      matchStage.category = category;
+    }
+
+    if (minPrice || maxPrice) {
+      matchStage.price = {};
+      if (minPrice) matchStage.price.$gte = Number(minPrice);
+      if (maxPrice) matchStage.price.$lte = Number(maxPrice);
+    }
+
+    if (search) {
+      matchStage.$text = { $search: search };
+    }
+
+    // Handle sort
+    let sortObj = { createdAt: -1 };
+    if (sort === 'price-asc') sortObj = { price: 1 };
+    else if (sort === 'price-desc') sortObj = { price: -1 };
+    else if (sort === 'rating') sortObj = { ratings: -1 };
+
+    // Built Aggregation Pipeline
+    const pipeline = [{ $match: matchStage }];
+
+    // If search exists, projected score if using $text search results
+    if (search) {
+      pipeline.push({ $addFields: { score: { $meta: 'textScore' } } });
+      sortObj = { score: { $meta: 'textScore' }, ...sortObj };
+    }
+
+    pipeline.push({ $sort: sortObj });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNum });
+    pipeline.push({ $project: { reviews: 0 } });
+
+    const products = await Product.aggregate(pipeline);
+
+    // Count total for pagination
+    const totalCountResult = await Product.countDocuments(matchStage);
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      total: totalCountResult,
+      page: Number(page),
+      pages: Math.ceil(totalCountResult / limitNum),
+      data: products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-
-  if (minPrice || maxPrice) {
-    matchStage.price = {};
-    if (minPrice) matchStage.price.$gte = Number(minPrice);
-    if (maxPrice) matchStage.price.$lte = Number(maxPrice);
-  }
-
-  if (search) {
-    matchStage.$text = { $search: search };
-  }
-
-  // Handle sort
-  let sortObj = { createdAt: -1 };
-  if (sort === 'price-asc') sortObj = { price: 1 };
-  else if (sort === 'price-desc') sortObj = { price: -1 };
-  else if (sort === 'rating') sortObj = { ratings: -1 };
-
-  // Built Aggregation Pipeline
-  const pipeline = [{ $match: matchStage }];
-
-  // If search exists, projected score if using $text search results
-  if (search) {
-    pipeline.push({ $addFields: { score: { $meta: 'textScore' } } });
-    sortObj = { score: { $meta: 'textScore' }, ...sortObj };
-  }
-
-  pipeline.push({ $sort: sortObj });
-  pipeline.push({ $skip: skip });
-  pipeline.push({ $limit: limitNum });
-  pipeline.push({ $project: { reviews: 0 } });
-
-  const products = await Product.aggregate(pipeline);
-
-  // Count total for pagination
-  const totalCountResult = await Product.countDocuments(matchStage);
-
-  res.status(200).json({
-    success: true,
-    count: products.length,
-    total: totalCountResult,
-    page: Number(page),
-    pages: Math.ceil(totalCountResult / limitNum),
-    data: products,
-  });
-} catch (error) {
-  res.status(500).json({
-    success: false,
-    message: error.message,
-  });
-}
 };
 
 // @desc    Get single product by ID
