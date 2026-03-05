@@ -45,6 +45,7 @@ app.use(helmet({
 const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:3000',
+  'https://digital-arc-technologies-ecommerce-two.vercel.app/',
   ...(process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim()) : []),
 ].filter(Boolean);
 
@@ -70,10 +71,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Data sanitization against NoSQL injection
-// Excluded from OAuth callback route which uses a different payload format
+// NOTE: req.query is a read-only getter in Vercel/serverless environments, so we manually 
+// sanitize only req.body and req.params to avoid a crash.
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/auth/google')) return next();
-  mongoSanitize({ replaceWith: '_' })(req, res, next);
+  try {
+    if (req.body) req.body = mongoSanitize.sanitize(req.body, { replaceWith: '_' });
+    if (req.params) req.params = mongoSanitize.sanitize(req.params, { replaceWith: '_' });
+  } catch (e) {
+    // Sanitization failed silently - do not crash the request
+  }
+  next();
 });
 
 
