@@ -65,7 +65,7 @@ export default function Header() {
                                 {dynamicCategories?.map((category) => (
                                     <Link
                                         key={category}
-                                        href={`/products?category=${category}`}
+                                        href={`/?category=${encodeURIComponent(category)}`}
                                         className="block px-4 py-2 text-sm text-sage-muted hover:bg-cream-beige hover:text-secondary"
                                     >
                                         {category}
@@ -73,7 +73,7 @@ export default function Header() {
                                 ))}
                                 <div className="border-t border-border-light mt-1 pt-1">
                                     <Link
-                                        href="/products"
+                                        href="/"
                                         className="block px-4 py-2 text-sm font-semibold text-secondary hover:bg-cream-beige"
                                     >
                                         Shop All
@@ -191,7 +191,7 @@ export default function Header() {
                                     {dynamicCategories?.map((category) => (
                                         <Link
                                             key={category}
-                                            href={`/products?category=${category}`}
+                                            href={`/?category=${encodeURIComponent(category)}`}
                                             className="block px-4 py-2.5 text-sm text-sage-muted hover:text-secondary transition-colors"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
@@ -199,7 +199,7 @@ export default function Header() {
                                         </Link>
                                     ))}
                                     <Link
-                                        href="/products"
+                                        href="/"
                                         className="block px-4 py-2.5 text-sm font-semibold text-secondary"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >

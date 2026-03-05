@@ -60,9 +60,9 @@ export const API_ENDPOINTS = {
     ME: '/auth/me',
 
     // Products
-    PRODUCTS: '/products',
-    CATEGORIES: '/products/categories',
-    PRODUCT_BY_ID: (id: string) => `/products/${id}`,
+    PRODUCTS: '/shop',
+    CATEGORIES: '/shop/categories',
+    PRODUCT_BY_ID: (id: string) => `/shop/${id}`,
 
     // Orders
     ORDERS: '/orders',

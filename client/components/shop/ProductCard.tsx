@@ -76,7 +76,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <Link href={`/products/${product._id}`} className="block relative aspect-square overflow-hidden">
+            <Link href={`/shop/${product._id}`} className="block relative aspect-square overflow-hidden">
                 {/* Product Image */}
                 <Image
                     src={getImageUrl(product.images[currentImageIndex]?.url || '/placeholder.png')}
@@ -125,7 +125,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             <CardContent className="p-3 sm:p-4 flex-grow flex flex-col">
                 <div className="flex justify-between items-start gap-2 mb-2">
-                    <Link href={`/products/${product._id}`} className="min-w-0 flex-1">
+                    <Link href={`/shop/${product._id}`} className="min-w-0 flex-1">
                         <h3 className="font-heading font-bold text-sm sm:text-lg text-primary line-clamp-2 hover:text-secondary transition-colors leading-tight">
                             {product.name}
                         </h3>
